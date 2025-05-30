@@ -1,0 +1,1686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Simulator</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #1a1a1a;
+            color: #00ff00;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #0d1b0d;
+            border: 2px solid #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .title {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+        }
+        
+        .metrics-display {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #0a0a0a;
+            border: 1px solid #00ff00;
+            border-radius: 5px;
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .metric-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .trend-line {
+            width: 60px;
+            height: 20px;
+            background-color: #000;
+            border: 1px solid #333;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .trend-path {
+            stroke-width: 2;
+            fill: none;
+        }
+        
+        .trend-path.green {
+            stroke: #00ff00;
+        }
+        
+        .trend-path.yellow {
+            stroke: #ffff00;
+        }
+        
+        .trend-path.red {
+            stroke: #ff6666;
+        }
+        
+        .trend-dot {
+            fill: #ffffff;
+            r: 1;
+        }
+        
+        .metric-name {
+            font-weight: bold;
+        }
+        
+        .metric-value {
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 3px;
+        }
+        
+        .green { background-color: #004400; color: #00ff00; }
+        .yellow { background-color: #444400; color: #ffff00; }
+        .red { background-color: #440000; color: #ff0000; }
+        
+        .scenario {
+            background-color: #0a0a0a;
+            border: 1px solid #00ff00;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        
+        .scenario-title {
+            color: #ffff00;
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .scenario-description {
+            margin-bottom: 20px;
+            color: #cccccc;
+        }
+        
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .choice-button {
+            background-color: #003300;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 15px;
+            text-align: left;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        
+        .choice-button:hover {
+            background-color: #004400;
+            box-shadow: 0 0 10px #00ff00;
+        }
+        
+        .choice-label {
+            font-weight: bold;
+            color: #00ffff;
+            margin-bottom: 5px;
+        }
+        
+        .game-info {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #888888;
+        }
+        
+        .results {
+            background-color: #001a1a;
+            border: 1px solid #00ffff;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .results-title {
+            color: #00ffff;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .metric-change {
+            margin: 5px 0;
+        }
+        
+        .positive { color: #00ff00; }
+        .negative { color: #ff6666; }
+        .neutral { color: #cccccc; }
+        
+        .continue-button {
+            background-color: #003366;
+            color: #00ffff;
+            border: 1px solid #00ffff;
+            padding: 15px 30px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-family: inherit;
+            font-size: 16px;
+            display: block;
+            margin: 20px auto;
+        }
+        
+        .continue-button:hover {
+            background-color: #004488;
+            box-shadow: 0 0 10px #00ffff;
+        }
+        
+        .triggers {
+            background-color: #1a0000;
+            border: 1px solid #ff6666;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        
+        .triggers-title {
+            color: #ff6666;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+        <div id="intro-screen" class="container">
+            <div class="title">🏛️ CAMPUS SIMULATOR 🏛️</div>
+            
+            <div style="background-color: #0a0a0a; border: 1px solid #00ff00; padding: 20px; margin: 20px 0; border-radius: 5px;">
+                <div style="color: #00ffff; font-size: 18px; margin-bottom: 15px; font-weight: bold;">
+                    Welcome, Campus Manager!
+                </div>
+                
+                <div style="color: #cccccc; line-height: 1.8; margin-bottom: 20px;">
+                    You've just been appointed to manage a university through <strong style="color: #ffff00;">four years of crisis and transformation</strong>. 
+                    Your decisions will shape the institution's future and determine what kind of educational community you create.
+                </div>
+                
+                <div style="color: #00ffff; font-size: 16px; margin: 20px 0 10px 0; font-weight: bold;">
+                    🎯 Your Mission:
+                </div>
+                
+                <div style="color: #cccccc; margin-bottom: 20px;">
+                    Balance <strong style="color: #00ff00;">six key metrics</strong> while navigating crises, scandals, and recovery. 
+                    Each decision reflects a different economic philosophy - choose wisely, as your choices compound over time!
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 20px 0;">
+                    <div style="color: #00ff00;">💰 Financial Strength</div>
+                    <div style="color: #00ff00;">⭐ Reputation</div>
+                    <div style="color: #00ff00;">🔬 Research Quality</div>
+                    <div style="color: #00ff00;">👥 Staff Morale</div>
+                    <div style="color: #00ff00;">🎓 Student Satisfaction</div>
+                    <div style="color: #00ff00;">🏘️ Local Impact</div>
+                </div>
+                
+                <div style="color: #00ffff; font-size: 16px; margin: 20px 0 10px 0; font-weight: bold;">
+                    📊 Understanding Your Dashboard:
+                </div>
+                
+                <div style="color: #cccccc; margin-bottom: 15px;">
+                    <strong style="color: #00ff00;">Green Zone (70-100):</strong> Thriving - keep up the good work!<br>
+                    <strong style="color: #ffff00;">Yellow Zone (40-69):</strong> Warning - attention needed<br>
+                    <strong style="color: #ff6666;">Red Zone (0-39):</strong> Crisis - urgent action required!
+                </div>
+                
+                <div style="color: #cccccc; margin-bottom: 20px;">
+                    <strong style="color: #00ffff;">Trend Lines:</strong> Watch the mini-charts next to each metric!
+                    <br>• <strong style="color: #00ff00;">Green lines</strong> = Improving trends
+                    <br>• <strong style="color: #ffff00;">Yellow lines</strong> = Stable trends  
+                    <br>• <strong style="color: #ff6666;">Red lines</strong> = Declining trends
+                </div>
+                
+                <div style="color: #00ffff; font-size: 16px; margin: 20px 0 10px 0; font-weight: bold;">
+                    🧭 Four Management Philosophies:
+                </div>
+                
+                <div style="color: #cccccc; margin-bottom: 20px;">
+                    <strong style="color: #00ffff;">Community:</strong> Democratic decision-making, shared ownership<br>
+                    <strong style="color: #ff9999;">Individualistic:</strong> Competition, merit-based rewards, market solutions<br>
+                    <strong style="color: #9999ff;">Corporate:</strong> Professional efficiency, systematic management<br>
+                    <strong style="color: #99ff99;">Nurturing:</strong> Human flourishing, comprehensive care
+                </div>
+                
+                <div style="background-color: #1a1a00; border: 1px solid #ffff00; padding: 15px; margin: 20px 0; border-radius: 5px;">
+                    <div style="color: #ffff00; font-weight: bold; margin-bottom: 10px;">⚠️ Remember:</div>
+                    <div style="color: #cccccc;">
+                        • Every choice has consequences - watch for cascade effects!<br>
+                        • Metrics in red zones trigger crisis events<br>
+                        • Your cultural choices shape what victory looks like<br>
+                        • There's no single "right" answer - explore different approaches!
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="continue-button" onclick="startGame()" style="font-size: 18px; padding: 20px 40px;">
+                        🚀 Begin Your Journey
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="container" id="game-screen" style="display: none;">
+        <div class="title">🏛️ CAMPUS SIMULATOR 🏛️</div>
+        
+        <div class="game-info">
+            <div>Month: <span id="current-month">September</span> | Year: <span id="current-year">1</span></div>
+            <div>Scenario: <span id="scenario-count">1</span> of 30</div>
+        </div>
+        
+        <div class="metrics-display">
+            <div class="metric">
+                <span class="metric-name">Financial:</span>
+                <div class="metric-info">
+                    <svg class="trend-line" id="financial-trend" viewBox="0 0 60 20" preserveAspectRatio="none">
+                        <polyline class="trend-path yellow" id="financial-path" points=""></polyline>
+                    </svg>
+                    <span class="metric-value" id="financial-value">60</span>
+                </div>
+            </div>
+            <div class="metric">
+                <span class="metric-name">Reputation:</span>
+                <div class="metric-info">
+                    <svg class="trend-line" id="reputation-trend" viewBox="0 0 60 20" preserveAspectRatio="none">
+                        <polyline class="trend-path yellow" id="reputation-path" points=""></polyline>
+                    </svg>
+                    <span class="metric-value" id="reputation-value">65</span>
+                </div>
+            </div>
+            <div class="metric">
+                <span class="metric-name">Research:</span>
+                <div class="metric-info">
+                    <svg class="trend-line" id="research-trend" viewBox="0 0 60 20" preserveAspectRatio="none">
+                        <polyline class="trend-path yellow" id="research-path" points=""></polyline>
+                    </svg>
+                    <span class="metric-value" id="research-value">70</span>
+                </div>
+            </div>
+            <div class="metric">
+                <span class="metric-name">Staff Morale:</span>
+                <div class="metric-info">
+                    <svg class="trend-line" id="staff-trend" viewBox="0 0 60 20" preserveAspectRatio="none">
+                        <polyline class="trend-path yellow" id="staff-path" points=""></polyline>
+                    </svg>
+                    <span class="metric-value" id="staff-value">55</span>
+                </div>
+            </div>
+            <div class="metric">
+                <span class="metric-name">Students:</span>
+                <div class="metric-info">
+                    <svg class="trend-line" id="student-trend" viewBox="0 0 60 20" preserveAspectRatio="none">
+                        <polyline class="trend-path yellow" id="student-path" points=""></polyline>
+                    </svg>
+                    <span class="metric-value" id="student-value">60</span>
+                </div>
+            </div>
+            <div class="metric">
+                <span class="metric-name">Local Impact:</span>
+                <div class="metric-info">
+                    <svg class="trend-line" id="local-trend" viewBox="0 0 60 20" preserveAspectRatio="none">
+                        <polyline class="trend-path yellow" id="local-path" points=""></polyline>
+                    </svg>
+                    <span class="metric-value" id="local-value">50</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="scenario" id="scenario-container">
+            <!-- Scenario content will be inserted here -->
+        </div>
+        
+        <div id="results-container" style="display: none;">
+            <!-- Results will be shown here -->
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let gameState = {
+            currentScenario: 0,
+            currentMonth: 0,
+            currentYear: 1,
+            metrics: {
+                financial: 60,
+                reputation: 65,
+                research: 70,
+                staff: 55,
+                student: 60,
+                local: 50
+            },
+            metricsHistory: {
+                financial: [60],
+                reputation: [65],
+                research: [70],
+                staff: [55],
+                student: [60],
+                local: [50]
+            },
+            culturalChoices: {
+                community: 0,
+                individualistic: 0,
+                corporate: 0,
+                nurturing: 0
+            }
+        };
+
+        // Month names
+        const months = [
+            "September", "October", "November", "December", 
+            "January", "February", "March", "April", 
+            "May", "June", "July", "August"
+        ];
+
+        // Complete 48 scenarios for the full game
+        const scenarios = [
+            // YEAR 1: PANDEMIC YEAR
+            {
+                title: "Enrollment Surge Crisis",
+                description: "Expected 3,000 students but 3,500 enrolled. Accommodation full, lecture halls overcrowded, staff stretched thin. Extra fees could help budget but quality suffers.",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Democratic meetings with all stakeholders for collaborative solutions",
+                        effects: { financial: 5, reputation: 5, research: -5, staff: 15, student: 10, local: 5 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response", 
+                        description: "Accept all paying students - survival of the fittest",
+                        effects: { financial: 15, reputation: 5, research: -5, staff: -5, student: -10, local: 0 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Efficient systems and temporary solutions",
+                        effects: { financial: 10, reputation: 5, research: 0, staff: -5, student: -5, local: 0 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Cap numbers to maintain quality and support",
+                        effects: { financial: 0, reputation: 10, research: 5, staff: 10, student: 15, local: 5 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            {
+                title: "Teaching Resource Crisis",
+                description: "Lecture halls packed, seminar groups doubled, senior staff complaining, junior lecturers burning out covering gaps.",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Staff-student committees to redistribute workload fairly",
+                        effects: { financial: -5, reputation: 5, research: -5, staff: 15, student: 5, local: 5 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Hire star lecturers with premium contracts",
+                        effects: { financial: -20, reputation: 5, research: 5, staff: -10, student: 10, local: 0 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Increase class sizes, implement efficiency measures",
+                        effects: { financial: 10, reputation: -5, research: 0, staff: -10, student: -15, local: -5 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Invest in support systems, reduce workload sustainably",
+                        effects: { financial: -15, reputation: 5, research: 5, staff: 20, student: 10, local: 5 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            {
+                title: "First Budget Pressures",
+                description: "Government announces potential funding cuts. Early projections show overspending. Treasury demands immediate action.",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Open budget discussions with all stakeholders",
+                        effects: { financial: -5, reputation: 10, research: 0, staff: 5, student: 5, local: 10 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Cut underperforming departments, invest in winners",
+                        effects: { financial: 15, reputation: 5, research: 10, staff: -15, student: -10, local: -5 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Across-the-board efficiency savings",
+                        effects: { financial: 20, reputation: 5, research: 0, staff: -10, student: -5, local: 0 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Protect services, seek alternative funding",
+                        effects: { financial: -10, reputation: 5, research: 5, staff: 10, student: 15, local: 10 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            {
+                title: "Staff Workload Crisis",
+                description: "Union complaint about 60+ hour weeks, double caseloads, spiking sick leave across departments.",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Joint working groups to redesign roles collaboratively",
+                        effects: { financial: -10, reputation: 5, research: -5, staff: 20, student: 5, local: 5 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Reward high performers, let others find their level",
+                        effects: { financial: 5, reputation: 0, research: 10, staff: -20, student: -10, local: 0 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Time management training and productivity monitoring",
+                        effects: { financial: 5, reputation: -5, research: 0, staff: -15, student: -5, local: -5 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Hire additional support, reduce individual workloads",
+                        effects: { financial: -25, reputation: 5, research: 10, staff: 25, student: 15, local: 5 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            {
+                title: "Pandemic Reports",
+                description: "Virus spreading internationally. Conflicting government advice. Students and parents nervous, international students considering leaving.",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Crisis committee with representatives from all groups",
+                        effects: { financial: -5, reputation: 10, research: 0, staff: 10, student: 15, local: 10 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Continue normal operations - voluntary participation",
+                        effects: { financial: 10, reputation: -15, research: 0, staff: -10, student: -15, local: -10 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Evidence-based risk management protocols",
+                        effects: { financial: 5, reputation: 15, research: 0, staff: 5, student: 5, local: 5 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Health and safety above all other considerations",
+                        effects: { financial: -15, reputation: 10, research: -5, staff: 15, student: 20, local: 15 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            {
+                title: "Lockdown Chaos",
+                description: "Government lockdown announced. Campus closed, online teaching overnight. Students demand fee reductions, staff struggle with tech, parents furious about 'Zoom University.'",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Collaborative emergency response - everyone helps everyone",
+                        effects: { financial: -15, reputation: 10, research: -10, staff: 20, student: 15, local: 10 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Sink or swim - adapt quickly or fall behind",
+                        effects: { financial: 5, reputation: -10, research: 5, staff: -20, student: -25, local: -5 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Rapid standardized online learning deployment",
+                        effects: { financial: 10, reputation: 10, research: 0, staff: -5, student: -5, local: 0 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Individual support for every student and staff member",
+                        effects: { financial: -30, reputation: 15, research: 5, staff: 25, student: 25, local: 15 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            {
+                title: "Online Teaching Disaster",
+                description: "Tech-savvy staff thriving, others struggling. Student engagement dropping, time zone issues, digital divide excluding poorer students.",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Peer teaching networks - mutual support",
+                        effects: { financial: -5, reputation: 5, research: -5, staff: 15, student: 10, local: 10 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Best content wins - market forces determine quality",
+                        effects: { financial: 10, reputation: 0, research: 10, staff: -10, student: -15, local: -5 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Standardized platform, training, metrics",
+                        effects: { financial: 15, reputation: 5, research: 0, staff: -10, student: -10, local: 0 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Individual support, flexible approaches, no one left behind",
+                        effects: { financial: -20, reputation: 10, research: 5, staff: 10, student: 20, local: 15 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            {
+                title: "Fee Revolt",
+                description: "Mass student protests about full fees for online education. #RefundOurFees going viral. Parents threatening legal action. Next year enrollment uncertain.",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Open negotiation with student representatives",
+                        effects: { financial: -15, reputation: 10, research: 0, staff: 5, student: 20, local: 15 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Hold firm - education still being delivered",
+                        effects: { financial: 20, reputation: -20, research: 0, staff: -10, student: -25, local: -10 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Partial refunds with service level agreements",
+                        effects: { financial: -5, reputation: 5, research: 0, staff: 0, student: 5, local: 5 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Significant fee reduction - education is a right",
+                        effects: { financial: -30, reputation: 20, research: 0, staff: 15, student: 30, local: 20 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            {
+                title: "Financial Shortfall Crisis",
+                description: "Pandemic costs + fee refunds + reduced international enrollment = massive budget hole. Treasury warns of potential insolvency.",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Transparent budget crisis meetings with all stakeholders",
+                        effects: { financial: -5, reputation: 10, research: 0, staff: 10, student: 5, local: 15 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Emergency cuts to lowest-performing areas only",
+                        effects: { financial: 25, reputation: 0, research: 5, staff: -20, student: -15, local: -10 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Systematic restructuring based on financial data",
+                        effects: { financial: 30, reputation: 5, research: 0, staff: -15, student: -10, local: -5 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Protect jobs and services, seek emergency funding",
+                        effects: { financial: -20, reputation: 15, research: 5, staff: 20, student: 15, local: 20 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            {
+                title: "Summer Planning Crisis",
+                description: "September planning with zero certainty. Online? Hybrid? Face-to-face? Every decision involves massive commitments with no guarantees.",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Scenario planning with entire campus community input",
+                        effects: { financial: -10, reputation: 5, research: -5, staff: 15, student: 10, local: 10 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Multiple competing plans - back the winners",
+                        effects: { financial: 5, reputation: 5, research: 10, staff: -15, student: -5, local: 0 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Data-driven decision making with clear metrics",
+                        effects: { financial: 15, reputation: 10, research: 0, staff: 5, student: 5, local: 5 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Plan for maximum flexibility to support all needs",
+                        effects: { financial: -25, reputation: 10, research: 5, staff: 20, student: 20, local: 15 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            {
+                title: "Staff Burnout Peak",
+                description: "Critical staff exhaustion. Physical and mental health problems. Support staff overwhelmed. Union threatening strike over working conditions.",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Collective support networks and shared workload",
+                        effects: { financial: -10, reputation: 5, research: 5, staff: 25, student: 10, local: 10 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Reward resilient performers, replace those who can't cope",
+                        effects: { financial: 10, reputation: -5, research: 15, staff: -30, student: -15, local: -10 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Professional wellbeing programs and efficiency improvements",
+                        effects: { financial: 5, reputation: 5, research: 0, staff: 10, student: 0, local: 5 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Comprehensive mental health support and workload reduction",
+                        effects: { financial: -25, reputation: 10, research: 10, staff: 35, student: 15, local: 15 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            {
+                title: "Redundancy Consultations",
+                description: "Budget mathematics are brutal. Must cut staff costs to survive. Union demanding meetings, media investigating, affected staff devastated.",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Democratic selection process with affected staff having voice",
+                        effects: { financial: 15, reputation: 10, research: 0, staff: 5, student: 5, local: 10 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Merit-based cuts - protect best, remove rest",
+                        effects: { financial: 25, reputation: 0, research: 20, staff: -25, student: -10, local: -5 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Objective criteria-based redundancies with professional process",
+                        effects: { financial: 30, reputation: 5, research: 0, staff: -15, student: -5, local: -5 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Voluntary severance and retraining before compulsory cuts",
+                        effects: { financial: 5, reputation: 15, research: 5, staff: 15, student: 10, local: 15 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+
+            // YEAR 2: SCANDAL YEAR
+            {
+                title: "New Term Under Cloud",
+                description: "New academic year begins with rock-bottom morale after summer redundancies. Remaining staff covering extra duties, increased class sizes, institution just surviving.",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Rebuild morale through collaborative recovery planning",
+                        effects: { financial: -10, reputation: 5, research: 5, staff: 15, student: 10, local: 10 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Fresh start - recruit new talent and drive excellence",
+                        effects: { financial: -15, reputation: 10, research: 15, staff: -10, student: 5, local: 0 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Streamlined operations with clear performance expectations",
+                        effects: { financial: 10, reputation: 5, research: 0, staff: -5, student: -5, local: 0 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Focus on healing and rebuilding community trust",
+                        effects: { financial: -15, reputation: 10, research: 10, staff: 25, student: 20, local: 15 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            {
+                title: "Morale at All-Time Low",
+                description: "Staff satisfaction surveys reveal devastating results. Workload stress, job insecurity, colleague loss creating toxic atmosphere affecting teaching quality.",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Create healing circles and peer support networks",
+                        effects: { financial: -5, reputation: 5, research: 10, staff: 20, student: 15, local: 10 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Focus resources on high performers, let others leave",
+                        effects: { financial: 15, reputation: -5, research: 10, staff: -20, student: -15, local: -10 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Professional development and performance management",
+                        effects: { financial: 5, reputation: 5, research: 0, staff: 5, student: 0, local: 5 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Comprehensive wellbeing program and workload redistribution",
+                        effects: { financial: -20, reputation: 10, research: 15, staff: 30, student: 25, local: 15 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            // Adding more scenarios - continuing from Year 2
+            {
+                title: "Government Funding Cuts",
+                description: "Government announces another 15% funding cut over two years, on top of existing pressures. Threatens any recovery being built.",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Unite campus community to lobby against cuts together",
+                        effects: { financial: -5, reputation: 15, research: 0, staff: 10, student: 10, local: 20 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Compete aggressively for remaining funding streams",
+                        effects: { financial: 10, reputation: 5, research: 15, staff: -10, student: -5, local: -5 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Diversify income streams, reduce government dependency",
+                        effects: { financial: 20, reputation: 10, research: 0, staff: -5, student: -10, local: -5 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Maintain educational quality despite reduced resources",
+                        effects: { financial: -15, reputation: 10, research: 5, staff: 10, student: 15, local: 15 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            {
+                title: "Leaked Emails Scandal",
+                description: "Internal emails about planned cuts leaked to press. Emails reveal senior management discussing department closures and staff targeting. Campus anger and suspicion explode.",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Full transparency - publish all decision-making processes",
+                        effects: { financial: -5, reputation: 20, research: 0, staff: 15, student: 10, local: 15 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Focus on leak source - discipline and move on",
+                        effects: { financial: 5, reputation: -15, research: 0, staff: -20, student: -15, local: -10 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Professional investigation, improved communication protocols",
+                        effects: { financial: 5, reputation: 5, research: 0, staff: -5, student: -5, local: 0 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Acknowledge hurt caused, rebuild trust through actions",
+                        effects: { financial: -10, reputation: 15, research: 10, staff: 25, student: 20, local: 20 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            {
+                title: "Senior Management Corruption Exposed",
+                description: "Investigative journalists reveal financial irregularities. Contracts to friends, expense abuse, potential embezzlement. National news dominates, reputation severely damaged.",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Immediate democratic oversight of all financial decisions",
+                        effects: { financial: -15, reputation: 10, research: 0, staff: 20, student: 15, local: 20 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Replace corrupt individuals with high-caliber leaders",
+                        effects: { financial: -20, reputation: 15, research: 10, staff: -5, student: 5, local: 0 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Professional audit and governance reforms",
+                        effects: { financial: 10, reputation: 20, research: 0, staff: 5, student: 5, local: 10 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Focus on healing community trust and rebuilding together",
+                        effects: { financial: -20, reputation: 15, research: 15, staff: 25, student: 20, local: 25 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            {
+                title: "Political Protection Scandal",
+                description: "UK Prime Minister offered honors to protect university scandal figures. Massive political firestorm. Institution at center of national corruption story involving highest government levels.",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Stand with affected staff and students against political corruption",
+                        effects: { financial: -10, reputation: 25, research: 0, staff: 30, student: 25, local: 30 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Distance institution from scandal, focus on excellence",
+                        effects: { financial: 5, reputation: -10, research: 10, staff: -15, student: 0, local: -10 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Professional crisis management and reputation protection",
+                        effects: { financial: 10, reputation: 15, research: 0, staff: 0, student: -5, local: 5 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Support all community members affected by scandal",
+                        effects: { financial: -25, reputation: 20, research: 10, staff: 35, student: 30, local: 35 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            {
+                title: "Staff and Student Protests",
+                description: "Accumulated stress explodes into campus-wide protests. Students and staff unite demanding change, better conditions, accountability. National media attention, additional leadership pressure.",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Join protests - leadership stands with community",
+                        effects: { financial: -15, reputation: 20, research: 0, staff: 35, student: 30, local: 30 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Let protests burn out while focusing on high performers",
+                        effects: { financial: 10, reputation: -15, research: 5, staff: -25, student: -30, local: -20 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Professional mediation and structured negotiation",
+                        effects: { financial: 5, reputation: 10, research: 0, staff: 10, student: 10, local: 10 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Listen deeply, commit to fundamental change",
+                        effects: { financial: -30, reputation: 25, research: 15, staff: 40, student: 35, local: 40 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            {
+                title: "Scottish Government Intervention",
+                description: "Scottish Government announces emergency intervention to save jobs and maintain educational provision. Welcome financial relief but loss of institutional autonomy. Government representatives oversee major decisions.",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Embrace government partnership for democratic accountability",
+                        effects: { financial: 25, reputation: 10, research: 0, staff: 20, student: 15, local: 25 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Negotiate maximum institutional independence",
+                        effects: { financial: 15, reputation: 5, research: 10, staff: 5, student: 0, local: 5 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Professional partnership with clear governance structures",
+                        effects: { financial: 30, reputation: 15, research: 0, staff: 15, student: 10, local: 20 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Grateful acceptance focused on serving educational mission",
+                        effects: { financial: 20, reputation: 15, research: 15, staff: 25, student: 20, local: 30 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+
+            // YEAR 3: ROAD TO RECOVERY
+            {
+                title: "New Leadership Question",
+                description: "New academic year begins with leadership question. Bring in new management, promote from within, or maintain continuity? Choice signals recovery direction and determines stakeholder confidence.",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Democratically elect new leadership from community",
+                        effects: { financial: -5, reputation: 15, research: 10, staff: 25, student: 20, local: 20 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Recruit high-profile external leader to drive excellence",
+                        effects: { financial: -15, reputation: 25, research: 20, staff: -10, student: 5, local: 0 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Professional headhunting for experienced manager",
+                        effects: { financial: 15, reputation: 15, research: 0, staff: 5, student: 5, local: 5 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Promote caring leaders who understand community needs",
+                        effects: { financial: 5, reputation: 15, research: 15, staff: 30, student: 25, local: 25 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            {
+                title: "First Positive Media Coverage",
+                description: "After months of negative press, first genuinely positive stories appear. How institution handles this turning point influences whether positive momentum continues or stalls.",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Share credit widely across entire campus community",
+                        effects: { financial: 5, reputation: 15, research: 15, staff: 30, student: 25, local: 25 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Leverage success to attract more high performers",
+                        effects: { financial: 15, reputation: 20, research: 25, staff: 5, student: 10, local: 5 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Strategic communication to maximize positive impact",
+                        effects: { financial: 20, reputation: 35, research: 0, staff: 10, student: 10, local: 15 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Use positive attention to highlight educational mission",
+                        effects: { financial: 5, reputation: 25, research: 25, staff: 25, student: 30, local: 30 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            {
+                title: "Quality Inspection Arrives",
+                description: "External quality inspectors arrive for comprehensive review of teaching, research, and governance. First major external validation since crisis, results will significantly influence future reputation and funding.",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Showcase collaborative achievements and democratic governance",
+                        effects: { financial: 10, reputation: 25, research: 20, staff: 25, student: 20, local: 25 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Highlight individual excellence and competitive achievements",
+                        effects: { financial: 15, reputation: 30, research: 35, staff: 10, student: 15, local: 5 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Professional presentation of systematic improvements",
+                        effects: { financial: 25, reputation: 40, research: 15, staff: 15, student: 15, local: 15 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Demonstrate commitment to holistic student development",
+                        effects: { financial: 10, reputation: 30, research: 30, staff: 30, student: 40, local: 30 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            {
+                title: "Staff Retention Success",
+                description: "Summer brings annual academic job movements. Whether university can retain key staff and attract new talent indicates recovery success and influences final year prospects.",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Collective commitment to staying and building together",
+                        effects: { financial: 20, reputation: 15, research: 25, staff: 35, student: 20, local: 25 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Competitive packages to retain and attract stars",
+                        effects: { financial: -15, reputation: 30, research: 40, staff: 10, student: 15, local: 5 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Strategic retention based on institutional priorities",
+                        effects: { financial: 25, reputation: 15, research: 20, staff: 15, student: 10, local: 10 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Comprehensive support for all staff development and wellbeing",
+                        effects: { financial: -10, reputation: 20, research: 35, staff: 45, student: 30, local: 30 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+
+            // YEAR 4: BACK ON TOP?
+            {
+                title: "Fresh Start or Same Old Problems?",
+                description: "Final academic year begins with question of whether genuine transformation occurred or institution simply returned to pre-crisis patterns. Early indicators set expectations for year ahead.",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Celebrate transformation while staying vigilant about democratic values",
+                        effects: { financial: 15, reputation: 25, research: 20, staff: 30, student: 25, local: 30 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Ambitious drive for sector leadership and excellence",
+                        effects: { financial: 25, reputation: 40, research: 35, staff: 15, student: 15, local: 10 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Professional assessment of transformation and strategic next steps",
+                        effects: { financial: 35, reputation: 30, research: 20, staff: 20, student: 20, local: 20 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Genuine transformation rooted in caring community values",
+                        effects: { financial: 20, reputation: 30, research: 35, staff: 40, student: 40, local: 40 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            {
+                title: "Research Funding Results",
+                description: "Major research funding decisions announced, providing crucial test of whether academic community has genuinely recovered research excellence and external confidence in institution.",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Collaborative research success shared across community",
+                        effects: { financial: 30, reputation: 25, research: 40, staff: 35, student: 20, local: 30 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Star researchers achieve breakthrough funding success",
+                        effects: { financial: 40, reputation: 40, research: 50, staff: 10, student: 15, local: 10 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Strategic research portfolio achieves systematic funding success",
+                        effects: { financial: 45, reputation: 35, research: 35, staff: 20, student: 15, local: 20 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Mission-driven research addressing community and global needs",
+                        effects: { financial: 25, reputation: 30, research: 45, staff: 35, student: 30, local: 35 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            {
+                title: "Final Assessment",
+                description: "Final scenario asks fundamental question about institutional transformation. What kind of institution has been built through four years of crisis and recovery choices?",
+                choices: [
+                    {
+                        label: "Community Response",
+                        description: "Democratic institution serving community needs through collaborative governance",
+                        effects: { financial: 10, reputation: 25, research: 25, staff: 40, student: 35, local: 45 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Response",
+                        description: "Excellence-driven institution achieving competitive sector leadership",
+                        effects: { financial: 30, reputation: 45, research: 40, staff: 15, student: 20, local: 10 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Response",
+                        description: "Professionally managed institution delivering systematic educational services",
+                        effects: { financial: 40, reputation: 30, research: 30, staff: 25, student: 25, local: 20 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Response",
+                        description: "Caring institution prioritizing human flourishing and community service",
+                        effects: { financial: 20, reputation: 35, research: 35, staff: 45, student: 50, local: 50 },
+                        culture: "nurturing"
+                    }
+                ]
+            }
+        ];
+
+        // Utility functions
+        function getMetricZone(value) {
+            if (value >= 70) return "green";
+            if (value >= 40) return "yellow";
+            return "red";
+        }
+
+        function updateMetricDisplay(metricId, value) {
+            const element = document.getElementById(metricId + '-value');
+            element.textContent = value;
+            element.className = 'metric-value ' + getMetricZone(value);
+            
+            // Update trend line
+            updateTrendLine(metricId);
+        }
+
+        function updateTrendLine(metricId) {
+            const history = gameState.metricsHistory[metricId];
+            const pathElement = document.getElementById(metricId + '-path');
+            
+            if (!pathElement || history.length < 1) {
+                console.log(`Could not find path element for ${metricId} or no history`);
+                return;
+            }
+            
+            // Create points for the trend line (max 8 points to fit in 60px width)
+            const maxPoints = 8;
+            const recentHistory = history.slice(-maxPoints);
+            const width = 60;
+            const height = 20;
+            
+            console.log(`Updating trend for ${metricId}:`, recentHistory);
+            
+            if (recentHistory.length === 1) {
+                // Single point - draw horizontal line (neutral color)
+                const y = height - ((recentHistory[0] / 100) * height);
+                const points = `0,${y} ${width},${y}`;
+                pathElement.setAttribute('points', points);
+                pathElement.setAttribute('class', 'trend-path yellow');
+                console.log(`Single point for ${metricId}: ${points} - set to yellow`);
+            } else {
+                // Multiple points - draw connecting line
+                let points = recentHistory.map((value, index) => {
+                    const x = (index / (recentHistory.length - 1)) * width;
+                    const y = height - ((value / 100) * height);
+                    return `${x},${y}`;
+                }).join(' ');
+                
+                pathElement.setAttribute('points', points);
+                console.log(`Multiple points for ${metricId}: ${points}`);
+                
+                // Color based on trend direction between most recent decision points
+                const currentValue = recentHistory[recentHistory.length - 1];
+                const previousValue = recentHistory[recentHistory.length - 2];
+                const trend = currentValue - previousValue;
+                
+                let colorClass = '';
+                if (trend > 0) {
+                    colorClass = 'trend-path green';
+                    console.log(`${metricId} trending UP: ${previousValue} → ${currentValue} (+${trend}) - setting GREEN`);
+                } else if (trend < 0) {
+                    colorClass = 'trend-path red';
+                    console.log(`${metricId} trending DOWN: ${previousValue} → ${currentValue} (${trend}) - setting RED`);
+                } else {
+                    colorClass = 'trend-path yellow';
+                    console.log(`${metricId} STABLE: ${previousValue} → ${currentValue} (${trend}) - setting YELLOW`);
+                }
+                
+                // Force the class change
+                pathElement.setAttribute('class', colorClass);
+                
+                // Double-check it was applied
+                console.log(`Final class for ${metricId}:`, pathElement.getAttribute('class'));
+            }
+        }
+
+        function updateAllMetrics() {
+            // Update displays first
+            updateMetricDisplay('financial', gameState.metrics.financial);
+            updateMetricDisplay('reputation', gameState.metrics.reputation);
+            updateMetricDisplay('research', gameState.metrics.research);
+            updateMetricDisplay('staff', gameState.metrics.staff);
+            updateMetricDisplay('student', gameState.metrics.student);
+            updateMetricDisplay('local', gameState.metrics.local);
+        }
+        
+        function recordMetricsInHistory() {
+            // Store current values in history after effects are applied
+            Object.keys(gameState.metrics).forEach(metric => {
+                gameState.metricsHistory[metric].push(gameState.metrics[metric]);
+                // Keep only last 10 values to prevent memory issues
+                if (gameState.metricsHistory[metric].length > 10) {
+                    gameState.metricsHistory[metric].shift();
+                }
+            });
+            
+            // Update trend lines after recording history
+            Object.keys(gameState.metrics).forEach(metric => {
+                updateTrendLine(metric);
+            });
+        }
+
+        function checkTriggers(oldMetrics) {
+            const triggers = [];
+            const metricNames = {
+                financial: "Financial",
+                reputation: "Reputation", 
+                research: "Research Quality",
+                staff: "Staff Morale",
+                student: "Student Satisfaction",
+                local: "Local Impact"
+            };
+
+            Object.keys(gameState.metrics).forEach(metric => {
+                const currentValue = gameState.metrics[metric];
+                const oldValue = oldMetrics[metric];
+                const change = currentValue - oldValue;
+                const currentZone = getMetricZone(currentValue);
+                const oldZone = getMetricZone(oldValue);
+                
+                // Only show triggers for yellow and red zones
+                if (currentZone === "yellow" || currentZone === "red") {
+                    let statusText = "";
+                    let changeText = "";
+                    
+                    // Determine if zone changed
+                    if (oldZone !== currentZone) {
+                        if (currentZone === "yellow") {
+                            statusText = "THREAT: Entered yellow zone";
+                        } else if (currentZone === "red") {
+                            statusText = "CRISIS: Entered red zone";
+                        }
+                    } else {
+                        // Same zone, show current status
+                        if (currentZone === "yellow") {
+                            statusText = "THREAT: In yellow zone";
+                        } else if (currentZone === "red") {
+                            statusText = "CRISIS: In red zone";
+                        }
+                    }
+                    
+                    // Add change indicator
+                    if (change > 0) {
+                        changeText = ` (${currentValue}, +${change})`;
+                    } else if (change < 0) {
+                        changeText = ` (${currentValue}, ${change})`;
+                    } else {
+                        changeText = ` (${currentValue}, no change)`;
+                    }
+                    
+                    const icon = currentZone === "red" ? "🚨" : "⚠️";
+                    triggers.push(`${icon} ${metricNames[metric]} ${statusText}${changeText}`);
+                }
+            });
+
+            return triggers;
+        }
+
+        function applyCascadeEffects() {
+            let cascadeMessage = "";
+            
+            // Apply penalties for yellow and red zones
+            Object.keys(gameState.metrics).forEach(metric => {
+                const value = gameState.metrics[metric];
+                
+                if (value < 40) { // Red zone
+                    switch(metric) {
+                        case 'staff':
+                            gameState.metrics.student = Math.max(0, gameState.metrics.student - 3);
+                            gameState.metrics.research = Math.max(0, gameState.metrics.research - 3);
+                            cascadeMessage += "💥 Staff morale collapse affecting teaching and research! ";
+                            break;
+                        case 'financial':
+                            Object.keys(gameState.metrics).forEach(otherMetric => {
+                                if (otherMetric !== 'financial') {
+                                    gameState.metrics[otherMetric] = Math.max(0, gameState.metrics[otherMetric] - 5);
+                                }
+                            });
+                            cascadeMessage += "💥 Financial crisis affecting all areas! ";
+                            break;
+                    }
+                } else if (value >= 40 && value < 70) { // Yellow zone
+                    switch(metric) {
+                        case 'student':
+                            gameState.metrics.reputation = Math.max(0, gameState.metrics.reputation - 1);
+                            gameState.metrics.financial = Math.max(0, gameState.metrics.financial - 1);
+                            cascadeMessage += "⚠️ Student dissatisfaction affecting reputation and enrollment. ";
+                            break;
+                        case 'staff':
+                            gameState.metrics.student = Math.max(0, gameState.metrics.student - 1);
+                            gameState.metrics.research = Math.max(0, gameState.metrics.research - 1);
+                            cascadeMessage += "⚠️ Staff concerns affecting teaching quality. ";
+                            break;
+                    }
+                }
+            });
+
+            return cascadeMessage;
+        }
+
+        function applyPositiveCascades() {
+            let cascadeMessage = "";
+            
+            // High staff morale benefits
+            if (gameState.metrics.staff >= 80) {
+                gameState.metrics.student = Math.min(100, gameState.metrics.student + 2);
+                gameState.metrics.research = Math.min(100, gameState.metrics.research + 2);
+                cascadeMessage += "✨ High staff morale boosting teaching and research! ";
+            }
+            
+            // High student satisfaction benefits
+            if (gameState.metrics.student >= 80) {
+                gameState.metrics.reputation = Math.min(100, gameState.metrics.reputation + 2);
+                gameState.metrics.financial = Math.min(100, gameState.metrics.financial + 3);
+                cascadeMessage += "✨ Happy students boosting reputation and enrollment! ";
+            }
+            
+            // Community synergy bonus
+            if (gameState.metrics.staff >= 75 && gameState.metrics.student >= 75 && gameState.metrics.local >= 60) {
+                gameState.metrics.reputation = Math.min(100, gameState.metrics.reputation + 3);
+                gameState.metrics.financial = Math.min(100, gameState.metrics.financial + 2);
+                cascadeMessage += "✨ COMMUNITY SYNERGY: Strong culture attracting external support! ";
+            }
+
+            return cascadeMessage;
+        }
+
+        function startGame() {
+            document.getElementById('intro-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'block';
+            
+            // Move all the game content into the game screen
+            const gameContent = `
+                <div class="title">🏛️ CAMPUS SIMULATOR 🏛️</div>
+                
+                <div class="game-info">
+                    <div>Month: <span id="current-month">September</span> | Year: <span id="current-year">1</span></div>
+                    <div>Scenario: <span id="scenario-count">1</span> of 30</div>
+                </div>
+                
+                <div class="metrics-display">
+                    <div class="metric">
+                        <span class="metric-name">Financial:</span>
+                        <div class="metric-info">
+                            <svg class="trend-line" id="financial-trend" viewBox="0 0 60 20" preserveAspectRatio="none">
+                                <polyline class="trend-path yellow" id="financial-path" points=""></polyline>
+                            </svg>
+                            <span class="metric-value" id="financial-value">60</span>
+                        </div>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-name">Reputation:</span>
+                        <div class="metric-info">
+                            <svg class="trend-line" id="reputation-trend" viewBox="0 0 60 20" preserveAspectRatio="none">
+                                <polyline class="trend-path yellow" id="reputation-path" points=""></polyline>
+                            </svg>
+                            <span class="metric-value" id="reputation-value">65</span>
+                        </div>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-name">Research:</span>
+                        <div class="metric-info">
+                            <svg class="trend-line" id="research-trend" viewBox="0 0 60 20" preserveAspectRatio="none">
+                                <polyline class="trend-path yellow" id="research-path" points=""></polyline>
+                            </svg>
+                            <span class="metric-value" id="research-value">70</span>
+                        </div>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-name">Staff Morale:</span>
+                        <div class="metric-info">
+                            <svg class="trend-line" id="staff-trend" viewBox="0 0 60 20" preserveAspectRatio="none">
+                                <polyline class="trend-path yellow" id="staff-path" points=""></polyline>
+                            </svg>
+                            <span class="metric-value" id="staff-value">55</span>
+                        </div>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-name">Students:</span>
+                        <div class="metric-info">
+                            <svg class="trend-line" id="student-trend" viewBox="0 0 60 20" preserveAspectRatio="none">
+                                <polyline class="trend-path yellow" id="student-path" points=""></polyline>
+                            </svg>
+                            <span class="metric-value" id="student-value">60</span>
+                        </div>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-name">Local Impact:</span>
+                        <div class="metric-info">
+                            <svg class="trend-line" id="local-trend" viewBox="0 0 60 20" preserveAspectRatio="none">
+                                <polyline class="trend-path yellow" id="local-path" points=""></polyline>
+                            </svg>
+                            <span class="metric-value" id="local-value">50</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="scenario" id="scenario-container">
+                    <!-- Scenario content will be inserted here -->
+                </div>
+                
+                <div id="results-container" style="display: none;">
+                    <!-- Results will be shown here -->
+                </div>
+            `;
+            
+            document.getElementById('game-screen').innerHTML = gameContent;
+            
+            // Initialize game
+            updateAllMetrics();
+            
+            // Initialize trend lines with starting values
+            Object.keys(gameState.metrics).forEach(metric => {
+                updateTrendLine(metric);
+            });
+            
+            displayScenario();
+        }
+
+        function displayScenario() {
+            if (gameState.currentScenario >= scenarios.length) {
+                // Game complete - show final results
+                const dominantCulture = Object.keys(gameState.culturalChoices).reduce((a, b) => 
+                    gameState.culturalChoices[a] > gameState.culturalChoices[b] ? a : b
+                );
+                
+                document.getElementById('scenario-container').innerHTML = `
+                    <div class="scenario-title">🎓 Campus Transformation Complete! 🎓</div>
+                    <div class="scenario-description">
+                        Congratulations! You've guided your university through four years of crisis and transformation.
+                        <br><br>
+                        <strong style="color: #00ffff;">Your Management Philosophy:</strong><br>
+                        Primary approach: <strong style="color: #ffff00;">${dominantCulture.charAt(0).toUpperCase() + dominantCulture.slice(1)}</strong>
+                        <br><br>
+                        <strong style="color: #00ffff;">Cultural Choice Distribution:</strong><br>
+                        Community: ${gameState.culturalChoices.community} choices<br>
+                        Individualistic: ${gameState.culturalChoices.individualistic} choices<br>
+                        Corporate: ${gameState.culturalChoices.corporate} choices<br>
+                        Nurturing: ${gameState.culturalChoices.nurturing} choices
+                        <br><br>
+                        <strong style="color: #00ffff;">Final Institution Profile:</strong><br>
+                        Look at your metrics and trend lines above to see what kind of university you've created!
+                        <br><br>
+                        <em style="color: #888888;">In the full game, this would include detailed victory assessment based on your chosen cultural path and whether you achieved sustainable success.</em>
+                    </div>
+                `;
+                return;
+            }
+
+            const scenario = scenarios[gameState.currentScenario];
+            const scenarioHTML = `
+                <div class="scenario-title">${scenario.title}</div>
+                <div class="scenario-description">${scenario.description}</div>
+                <div class="choices">
+                    ${scenario.choices.map((choice, index) => `
+                        <button class="choice-button" onclick="makeChoice(${index})">
+                            <div class="choice-label">${choice.label}</div>
+                            <div>${choice.description}</div>
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+            document.getElementById('scenario-container').innerHTML = scenarioHTML;
+        }
+
+        function makeChoice(choiceIndex) {
+            const scenario = scenarios[gameState.currentScenario];
+            const choice = scenario.choices[choiceIndex];
+            
+            // Track cultural choice
+            gameState.culturalChoices[choice.culture]++;
+            
+            // Apply effects
+            const oldMetrics = {...gameState.metrics};
+            Object.keys(choice.effects).forEach(metric => {
+                gameState.metrics[metric] = Math.max(0, Math.min(100, gameState.metrics[metric] + choice.effects[metric]));
+            });
+            
+            // Apply cascade effects
+            const cascadeMessage = applyCascadeEffects();
+            const positiveMessage = applyPositiveCascades();
+            
+            // Update display
+            updateAllMetrics();
+            
+            // Record metrics in history for trend lines
+            recordMetricsInHistory();
+            
+            // Show results
+            showResults(choice, oldMetrics, cascadeMessage + positiveMessage);
+        }
+
+        function showResults(choice, oldMetrics, cascadeMessage) {
+            const triggers = checkTriggers(oldMetrics);
+            
+            let resultsHTML = `
+                <div class="results">
+                    <div class="results-title">Results: ${choice.label}</div>
+                    <div style="margin-bottom: 15px; font-style: italic;">"${choice.description}"</div>
+            `;
+            
+            // Show metric changes
+            Object.keys(choice.effects).forEach(metric => {
+                const change = choice.effects[metric];
+                const oldValue = oldMetrics[metric];
+                const newValue = gameState.metrics[metric];
+                const changeClass = change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral';
+                const changeStr = change > 0 ? `+${change}` : `${change}`;
+                
+                resultsHTML += `
+                    <div class="metric-change">
+                        ${metric.charAt(0).toUpperCase() + metric.slice(1)}: ${oldValue} → ${newValue} <span class="${changeClass}">(${changeStr})</span>
+                    </div>
+                `;
+            });
+            
+            if (cascadeMessage) {
+                resultsHTML += `<div style="margin-top: 15px; color: #ffff00;">${cascadeMessage}</div>`;
+            }
+            
+            if (triggers.length > 0) {
+                resultsHTML += `
+                    <div class="triggers">
+                        <div class="triggers-title">⚠️ TRIGGERED EVENTS:</div>
+                        ${triggers.map(trigger => `<div>• ${trigger}</div>`).join('')}
+                    </div>
+                `;
+            }
+            
+            resultsHTML += `
+                    <button class="continue-button" onclick="nextScenario()">Continue to Next Month</button>
+                </div>
+            `;
+            
+            document.getElementById('results-container').innerHTML = resultsHTML;
+            document.getElementById('results-container').style.display = 'block';
+            document.getElementById('scenario-container').style.display = 'none';
+        }
+
+        function nextScenario() {
+            gameState.currentScenario++;
+            gameState.currentMonth++;
+            
+            if (gameState.currentMonth >= 12) {
+                gameState.currentMonth = 0;
+                gameState.currentYear++;
+            }
+            
+            document.getElementById('current-month').textContent = months[gameState.currentMonth];
+            document.getElementById('current-year').textContent = gameState.currentYear;
+            document.getElementById('scenario-count').textContent = gameState.currentScenario + 1;
+            
+            document.getElementById('results-container').style.display = 'none';
+            document.getElementById('scenario-container').style.display = 'block';
+            
+            displayScenario();
+        }
+
+        // Initialize intro screen on load
+        // Game will start when player clicks the button
+    </script>
+</body>
+</html>
