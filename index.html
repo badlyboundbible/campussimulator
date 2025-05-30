@@ -2,368 +2,707 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Campus Simulator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Campus Crisis Manager</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Manage your university through 4 years of crisis in this retro-style simulation game">
+    <meta name="theme-color" content="#2a2a2a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Campus Crisis">
+    
+    <!-- PWA Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23333'/%3E%3Ctext x='16' y='20' text-anchor='middle' fill='%23fff' font-family='monospace' font-size='16'%3E🏛️%3C/text%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23333'/%3E%3Ctext x='16' y='20' text-anchor='middle' fill='%23fff' font-family='monospace' font-size='16'%3E🏛️%3C/text%3E%3C/svg%3E">
+    
     <style>
-        body {
-            font-family: 'Courier New', monospace;
-            background-color: #1a1a1a;
-            color: #00ff00;
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        :root {
+            /* 16-bit Color Palette */
+            --bg-dark: #1a1a1a;
+            --bg-med: #2a2a2a;
+            --bg-light: #3a3a3a;
+            --border-main: #4a4a4a;
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --text-dim: #888888;
+            
+            /* Status Colors */
+            --health-good: #00aa00;
+            --health-warn: #ffaa00;
+            --health-bad: #aa0000;
+            --crisis-bg: #330000;
+            --crisis-border: #aa0000;
+            
+            /* UI Colors */
+            --button-bg: #333333;
+            --button-hover: #444444;
+            --button-active: #555555;
+            --accent-blue: #0066aa;
+            --accent-cyan: #00aaaa;
+            --accent-yellow: #aaaa00;
+        }
+        
+        * {
+            box-sizing: border-box;
             margin: 0;
-            padding: 20px;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 8px;
             line-height: 1.6;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-text-size-adjust: none;
+            -moz-text-size-adjust: none;
+            text-size-adjust: none;
         }
         
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: #0d1b0d;
-            border: 2px solid #00ff00;
-            padding: 20px;
-            border-radius: 10px;
+        .game-container {
+            max-width: 100vw;
+            min-height: 100vh;
+            padding: 8px;
+            background: 
+                radial-gradient(circle at 25% 25%, rgba(0,102,170,0.1) 0%, transparent 25%),
+                radial-gradient(circle at 75% 75%, rgba(170,170,0,0.05) 0%, transparent 25%),
+                var(--bg-dark);
         }
         
-        .title {
+        /* 16-bit Style Borders */
+        .pixel-border {
+            border: 2px solid var(--border-main);
+            border-image: 
+                url("data:image/svg+xml,%3csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m0 0h8v8h-8zm92 0h8v8h-8zm0 92h8v8h-8zm-92 0h8v8h-8z' fill='%23666'/%3e%3c/svg%3e") 
+                8 repeat;
+            background: var(--bg-med);
+        }
+        
+        .pixel-border-thick {
+            border: 3px solid var(--border-main);
+            position: relative;
+        }
+        
+        .pixel-border-thick::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            right: -1px;
+            bottom: -1px;
+            border: 1px solid var(--text-dim);
+            pointer-events: none;
+        }
+        
+        /* Header */
+        .game-header {
             text-align: center;
-            font-size: 24px;
-            margin-bottom: 20px;
-            color: #00ffff;
-            text-shadow: 0 0 10px #00ffff;
+            margin-bottom: 12px;
+            padding: 12px 8px;
+            background: linear-gradient(135deg, var(--bg-med), var(--bg-light));
+            border-radius: 0;
         }
         
-        .metrics-display {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: #0a0a0a;
-            border: 1px solid #00ff00;
-            border-radius: 5px;
+        .game-title {
+            font-size: 12px;
+            color: var(--accent-cyan);
+            text-shadow: 2px 2px 0px var(--bg-dark);
+            margin-bottom: 8px;
+            letter-spacing: 1px;
         }
         
-        .metric {
+        .game-subtitle {
+            font-size: 6px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        
+        .game-info {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            font-size: 7px;
+            color: var(--text-dim);
+            margin-top: 8px;
+            flex-wrap: wrap;
+            gap: 8px;
         }
         
-        .metric-info {
+        @media (max-width: 480px) {
+            .game-info {
+                flex-direction: column;
+                text-align: center;
+                gap: 4px;
+            }
+        }
+        
+        /* Metrics Display */
+        .metrics-container {
+            margin-bottom: 16px;
+            padding: 12px;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        
+        @media (max-width: 360px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+                gap: 6px;
+            }
+        }
+        
+        .metric-card {
+            background: var(--bg-light);
+            border: 2px solid var(--border-main);
+            padding: 8px;
+            position: relative;
+            min-height: 48px;
+        }
+        
+        .metric-name {
+            font-size: 7px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+        
+        .metric-display {
             display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: space-between;
+            gap: 8px;
         }
         
-        .trend-line {
-            width: 60px;
-            height: 20px;
-            background-color: #000;
-            border: 1px solid #333;
+        .metric-value {
+            font-size: 11px;
+            font-weight: bold;
+            padding: 4px 8px;
+            border: 1px solid var(--border-main);
+            min-width: 32px;
+            text-align: center;
+        }
+        
+        .metric-value.good { 
+            background: var(--health-good); 
+            color: white;
+            border-color: #00cc00;
+        }
+        .metric-value.warn { 
+            background: var(--health-warn); 
+            color: black;
+            border-color: #ffcc00;
+        }
+        .metric-value.bad { 
+            background: var(--health-bad); 
+            color: white;
+            border-color: #cc0000;
+        }
+        
+        /* Pixel Art Trend Indicators */
+        .trend-indicator {
+            width: 24px;
+            height: 16px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-main);
             position: relative;
             overflow: hidden;
         }
         
-        .trend-path {
-            stroke-width: 2;
-            fill: none;
+        .trend-bars {
+            display: flex;
+            align-items: end;
+            height: 100%;
+            padding: 2px;
+            gap: 1px;
         }
         
-        .trend-path.green {
-            stroke: #00ff00;
+        .trend-bar {
+            flex: 1;
+            background: var(--text-dim);
+            min-height: 2px;
         }
         
-        .trend-path.yellow {
-            stroke: #ffff00;
+        .trend-bar.up { background: var(--health-good); }
+        .trend-bar.down { background: var(--health-bad); }
+        .trend-bar.stable { background: var(--health-warn); }
+        
+        /* Scenario Display */
+        .scenario-container {
+            margin-bottom: 16px;
+            padding: 12px;
         }
         
-        .trend-path.red {
-            stroke: #ff6666;
-        }
-        
-        .trend-dot {
-            fill: #ffffff;
-            r: 1;
-        }
-        
-        .metric-name {
-            font-weight: bold;
-        }
-        
-        .metric-value {
-            font-weight: bold;
-            padding: 2px 8px;
-            border-radius: 3px;
-        }
-        
-        .green { background-color: #004400; color: #00ff00; }
-        .yellow { background-color: #444400; color: #ffff00; }
-        .red { background-color: #440000; color: #ff0000; }
-        
-        .scenario {
-            background-color: #0a0a0a;
-            border: 1px solid #00ff00;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 5px;
+        .scenario-card {
+            background: var(--bg-med);
+            padding: 12px;
+            margin-bottom: 12px;
         }
         
         .scenario-title {
-            color: #ffff00;
-            font-size: 18px;
-            margin-bottom: 10px;
-            font-weight: bold;
+            font-size: 9px;
+            color: var(--accent-yellow);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
         .scenario-description {
-            margin-bottom: 20px;
-            color: #cccccc;
+            font-size: 7px;
+            line-height: 1.8;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
         }
         
-        .choices {
+        /* Crisis Styling */
+        .crisis-scenario {
+            background: var(--crisis-bg) !important;
+            border-color: var(--crisis-border) !important;
+            animation: crisis-pulse 2s infinite;
+        }
+        
+        .crisis-title {
+            color: var(--crisis-border) !important;
+            animation: crisis-flash 1s infinite;
+        }
+        
+        @keyframes crisis-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(170, 0, 0, 0.3); }
+            50% { box-shadow: 0 0 0 4px rgba(170, 0, 0, 0.1); }
+        }
+        
+        @keyframes crisis-flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        /* Choice Buttons */
+        .choices-container {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
         
         .choice-button {
-            background-color: #003300;
-            color: #00ff00;
-            border: 1px solid #00ff00;
-            padding: 15px;
+            background: var(--button-bg);
+            border: 2px solid var(--border-main);
+            color: var(--text-primary);
+            padding: 12px;
+            font-family: inherit;
+            font-size: 7px;
             text-align: left;
             cursor: pointer;
-            border-radius: 5px;
-            transition: all 0.3s;
-            font-family: inherit;
-            font-size: 14px;
+            transition: all 0.2s ease;
+            position: relative;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
         
-        .choice-button:hover {
-            background-color: #004400;
-            box-shadow: 0 0 10px #00ff00;
+        .choice-button:hover, .choice-button:focus {
+            background: var(--button-hover);
+            border-color: var(--accent-cyan);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .choice-button:active {
+            background: var(--button-active);
+            transform: translateY(0);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
         }
         
         .choice-label {
+            font-size: 8px;
+            color: var(--accent-cyan);
+            margin-bottom: 4px;
+            text-transform: uppercase;
             font-weight: bold;
-            color: #00ffff;
-            margin-bottom: 5px;
         }
         
-        .game-info {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #888888;
+        .choice-description {
+            font-size: 6px;
+            line-height: 1.6;
+            color: var(--text-secondary);
         }
         
-        .results {
-            background-color: #001a1a;
-            border: 1px solid #00ffff;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 5px;
+        /* Cultural Philosophy Colors */
+        .choice-button.community { border-left: 4px solid #00aaaa; }
+        .choice-button.individualistic { border-left: 4px solid #aa5555; }
+        .choice-button.corporate { border-left: 4px solid #5555aa; }
+        .choice-button.nurturing { border-left: 4px solid #55aa55; }
+        
+        /* Results Display */
+        .results-container {
+            margin-top: 16px;
+            padding: 12px;
+        }
+        
+        .results-card {
+            background: var(--bg-light);
+            padding: 12px;
+            margin-bottom: 12px;
         }
         
         .results-title {
-            color: #00ffff;
-            font-weight: bold;
-            margin-bottom: 10px;
+            font-size: 8px;
+            color: var(--accent-blue);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        
+        .metric-changes {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin: 8px 0;
+            font-size: 6px;
+        }
+        
+        @media (max-width: 360px) {
+            .metric-changes {
+                grid-template-columns: 1fr;
+            }
         }
         
         .metric-change {
-            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-main);
         }
         
-        .positive { color: #00ff00; }
-        .negative { color: #ff6666; }
-        .neutral { color: #cccccc; }
+        .change-positive { color: var(--health-good); }
+        .change-negative { color: var(--health-bad); }
+        .change-neutral { color: var(--text-dim); }
         
+        /* Continue Button */
         .continue-button {
-            background-color: #003366;
-            color: #00ffff;
-            border: 1px solid #00ffff;
-            padding: 15px 30px;
-            cursor: pointer;
-            border-radius: 5px;
+            width: 100%;
+            background: var(--accent-blue);
+            border: 2px solid var(--border-main);
+            color: white;
+            padding: 16px;
             font-family: inherit;
-            font-size: 16px;
-            display: block;
-            margin: 20px auto;
+            font-size: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: all 0.2s ease;
         }
         
         .continue-button:hover {
-            background-color: #004488;
-            box-shadow: 0 0 10px #00ffff;
+            background: #0077cc;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
         
-        .triggers {
-            background-color: #1a0000;
-            border: 1px solid #ff6666;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
+        .continue-button:active {
+            transform: translateY(0);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Alert/Trigger Styling */
+        .triggers-container {
+            background: var(--health-warn);
+            color: black;
+            padding: 8px;
+            margin: 8px 0;
+            border: 2px solid #ffcc00;
         }
         
         .triggers-title {
-            color: #ff6666;
+            font-size: 7px;
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
+        }
+        
+        .trigger-item {
+            font-size: 6px;
+            margin: 2px 0;
+        }
+        
+        /* Intro Screen */
+        .intro-screen {
+            text-align: center;
+            padding: 16px;
+            max-width: 100%;
+        }
+        
+        .intro-content {
+            background: var(--bg-med);
+            padding: 16px;
+            margin: 12px 0;
+        }
+        
+        .intro-title {
+            font-size: 10px;
+            color: var(--accent-cyan);
+            margin-bottom: 12px;
+            text-shadow: 2px 2px 0px var(--bg-dark);
+        }
+        
+        .intro-text {
+            font-size: 7px;
+            line-height: 1.8;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            text-align: left;
+        }
+        
+        .start-button {
+            background: var(--health-good);
+            border: 3px solid #00cc00;
+            color: white;
+            padding: 16px 24px;
+            font-family: inherit;
+            font-size: 9px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+        }
+        
+        .start-button:hover {
+            background: #00cc00;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 170, 0, 0.4);
+        }
+        
+        /* Hidden class */
+        .hidden {
+            display: none !important;
+        }
+        
+        /* Touch-friendly adjustments */
+        @media (max-width: 768px) {
+            .choice-button {
+                min-height: 72px;
+                padding: 16px;
+                font-size: 8px;
+            }
+            
+            .choice-label {
+                font-size: 9px;
+            }
+            
+            .choice-description {
+                font-size: 7px;
+            }
+            
+            .continue-button {
+                padding: 20px;
+                font-size: 9px;
+            }
+        }
+        
+        /* Very small screens */
+        @media (max-width: 320px) {
+            body {
+                font-size: 7px;
+            }
+            
+            .game-container {
+                padding: 4px;
+            }
+            
+            .game-title {
+                font-size: 10px;
+            }
+            
+            .scenario-title {
+                font-size: 8px;
+            }
         }
     </style>
 </head>
 <body>
-        <div id="intro-screen" class="container">
-            <div class="title">🏛️ CAMPUS SIMULATOR 🏛️</div>
-            
-            <div style="background-color: #0a0a0a; border: 1px solid #00ff00; padding: 20px; margin: 20px 0; border-radius: 5px;">
-                <div style="color: #00ffff; font-size: 18px; margin-bottom: 15px; font-weight: bold;">
-                    Welcome, Campus Manager!
+    <!-- Intro Screen -->
+    <div id="intro-screen" class="intro-screen">
+        <div class="game-container">
+            <div class="intro-content pixel-border">
+                <div class="intro-title">🏛️ CAMPUS CRISIS MANAGER 🏛️</div>
+                
+                <div class="intro-text">
+                    <strong style="color: var(--accent-yellow);">Welcome, Campus Manager!</strong><br><br>
+                    
+                    You've been appointed to manage a university through <strong>four years of crisis and transformation</strong>. 
+                    Your decisions will shape the institution's future and determine what kind of educational community you create.<br><br>
+                    
+                    <strong style="color: var(--accent-cyan);">🎯 Your Mission:</strong><br>
+                    Balance six key metrics while navigating crises, scandals, and recovery. Each decision reflects a different economic philosophy - choose wisely!<br><br>
+                    
+                    <strong style="color: var(--accent-cyan);">📊 Metrics to Manage:</strong><br>
+                    • Financial Strength<br>
+                    • Reputation<br>
+                    • Research Quality<br>
+                    • Staff Morale<br>
+                    • Student Satisfaction<br>
+                    • Local Impact<br><br>
+                    
+                    <strong style="color: var(--health-good);">Green (70-100):</strong> Thriving<br>
+                    <strong style="color: var(--health-warn);">Yellow (40-69):</strong> Warning<br>
+                    <strong style="color: var(--health-bad);">Red (0-39):</strong> Crisis!<br><br>
+                    
+                    <em style="color: var(--text-dim);">Every choice has consequences. There's no single "right" answer - explore different management philosophies!</em>
                 </div>
                 
-                <div style="color: #cccccc; line-height: 1.8; margin-bottom: 20px;">
-                    You've just been appointed to manage a university through <strong style="color: #ffff00;">four years of crisis and transformation</strong>. 
-                    Your decisions will shape the institution's future and determine what kind of educational community you create.
-                </div>
-                
-                <div style="color: #00ffff; font-size: 16px; margin: 20px 0 10px 0; font-weight: bold;">
-                    🎯 Your Mission:
-                </div>
-                
-                <div style="color: #cccccc; margin-bottom: 20px;">
-                    Balance <strong style="color: #00ff00;">six key metrics</strong> while navigating crises, scandals, and recovery. 
-                    Each decision reflects a different economic philosophy - choose wisely, as your choices compound over time!
-                </div>
-                
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 20px 0;">
-                    <div style="color: #00ff00;">💰 Financial Strength</div>
-                    <div style="color: #00ff00;">⭐ Reputation</div>
-                    <div style="color: #00ff00;">🔬 Research Quality</div>
-                    <div style="color: #00ff00;">👥 Staff Morale</div>
-                    <div style="color: #00ff00;">🎓 Student Satisfaction</div>
-                    <div style="color: #00ff00;">🏘️ Local Impact</div>
-                </div>
-                
-                <div style="color: #00ffff; font-size: 16px; margin: 20px 0 10px 0; font-weight: bold;">
-                    📊 Understanding Your Dashboard:
-                </div>
-                
-                <div style="color: #cccccc; margin-bottom: 15px;">
-                    <strong style="color: #00ff00;">Green Zone (70-100):</strong> Thriving - keep up the good work!<br>
-                    <strong style="color: #ffff00;">Yellow Zone (40-69):</strong> Warning - attention needed<br>
-                    <strong style="color: #ff6666;">Red Zone (0-39):</strong> Crisis - urgent action required!
-                </div>
-                
-                <div style="color: #cccccc; margin-bottom: 20px;">
-                    <strong style="color: #00ffff;">Trend Lines:</strong> Watch the mini-charts next to each metric!
-                    <br>• <strong style="color: #00ff00;">Green lines</strong> = Improving trends
-                    <br>• <strong style="color: #ffff00;">Yellow lines</strong> = Stable trends  
-                    <br>• <strong style="color: #ff6666;">Red lines</strong> = Declining trends
-                </div>
-                
-                <div style="color: #00ffff; font-size: 16px; margin: 20px 0 10px 0; font-weight: bold;">
-                    🧭 Four Management Philosophies:
-                </div>
-                
-                <div style="color: #cccccc; margin-bottom: 20px;">
-                    <strong style="color: #00ffff;">Community:</strong> Democratic decision-making, shared ownership<br>
-                    <strong style="color: #ff9999;">Individualistic:</strong> Competition, merit-based rewards, market solutions<br>
-                    <strong style="color: #9999ff;">Corporate:</strong> Professional efficiency, systematic management<br>
-                    <strong style="color: #99ff99;">Nurturing:</strong> Human flourishing, comprehensive care
-                </div>
-                
-                <div style="background-color: #1a1a00; border: 1px solid #ffff00; padding: 15px; margin: 20px 0; border-radius: 5px;">
-                    <div style="color: #ffff00; font-weight: bold; margin-bottom: 10px;">⚠️ Remember:</div>
-                    <div style="color: #cccccc;">
-                        • Every choice has consequences - watch for cascade effects!<br>
-                        • Metrics in red zones trigger crisis events<br>
-                        • Your cultural choices shape what victory looks like<br>
-                        • There's no single "right" answer - explore different approaches!
+                <button class="start-button pixel-border" onclick="startGame()">
+                    🚀 Begin Your Journey
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Game Screen -->
+    <div id="game-screen" class="game-container hidden">
+        <!-- Header -->
+        <div class="game-header pixel-border">
+            <div class="game-title">CAMPUS CRISIS MANAGER</div>
+            <div class="game-subtitle">16-BIT MANAGEMENT SIMULATOR</div>
+            <div class="game-info">
+                <span>Month: <span id="current-month">September</span></span>
+                <span>Year: <span id="current-year">1</span></span>
+                <span>Scenario: <span id="scenario-count">1</span> of 30</span>
+            </div>
+        </div>
+        
+        <!-- Metrics Display -->
+        <div class="metrics-container pixel-border">
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-name">💰 Financial</div>
+                    <div class="metric-display">
+                        <div class="trend-indicator">
+                            <div class="trend-bars" id="financial-trend">
+                                <div class="trend-bar"></div>
+                                <div class="trend-bar"></div>
+                                <div class="trend-bar"></div>
+                                <div class="trend-bar"></div>
+                            </div>
+                        </div>
+                        <div class="metric-value warn" id="financial-value">60</div>
                     </div>
                 </div>
                 
-                <div style="text-align: center; margin-top: 30px;">
-                    <button class="continue-button" onclick="startGame()" style="font-size: 18px; padding: 20px 40px;">
-                        🚀 Begin Your Journey
-                    </button>
+                <div class="metric-card">
+                    <div class="metric-name">⭐ Reputation</div>
+                    <div class="metric-display">
+                        <div class="trend-indicator">
+                            <div class="trend-bars" id="reputation-trend">
+                                <div class="trend-bar"></div>
+                                <div class="trend-bar"></div>
+                                <div class="trend-bar"></div>
+                                <div class="trend-bar"></div>
+                            </div>
+                        </div>
+                        <div class="metric-value warn" id="reputation-value">65</div>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-name">🔬 Research</div>
+                    <div class="metric-display">
+                        <div class="trend-indicator">
+                            <div class="trend-bars" id="research-trend">
+                                <div class="trend-bar"></div>
+                                <div class="trend-bar"></div>
+                                <div class="trend-bar"></div>
+                                <div class="trend-bar"></div>
+                            </div>
+                        </div>
+                        <div class="metric-value good" id="research-value">70</div>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-name">👥 Staff</div>
+                    <div class="metric-display">
+                        <div class="trend-indicator">
+                            <div class="trend-bars" id="staff-trend">
+                                <div class="trend-bar"></div>
+                                <div class="trend-bar"></div>
+                                <div class="trend-bar"></div>
+                                <div class="trend-bar"></div>
+                            </div>
+                        </div>
+                        <div class="metric-value warn" id="staff-value">55</div>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-name">🎓 Students</div>
+                    <div class="metric-display">
+                        <div class="trend-indicator">
+                            <div class="trend-bars" id="student-trend">
+                                <div class="trend-bar"></div>
+                                <div class="trend-bar"></div>
+                                <div class="trend-bar"></div>
+                                <div class="trend-bar"></div>
+                            </div>
+                        </div>
+                        <div class="metric-value warn" id="student-value">60</div>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-name">🏘️ Local</div>
+                    <div class="metric-display">
+                        <div class="trend-indicator">
+                            <div class="trend-bars" id="local-trend">
+                                <div class="trend-bar"></div>
+                                <div class="trend-bar"></div>
+                                <div class="trend-bar"></div>
+                                <div class="trend-bar"></div>
+                            </div>
+                        </div>
+                        <div class="metric-value warn" id="local-value">50</div>
+                    </div>
                 </div>
             </div>
         </div>
         
-        <div class="container" id="game-screen" style="display: none;">
-        <div class="title">🏛️ CAMPUS SIMULATOR 🏛️</div>
-        
-        <div class="game-info">
-            <div>Month: <span id="current-month">September</span> | Year: <span id="current-year">1</span></div>
-            <div>Scenario: <span id="scenario-count">1</span> of 30</div>
-        </div>
-        
-        <div class="metrics-display">
-            <div class="metric">
-                <span class="metric-name">Financial:</span>
-                <div class="metric-info">
-                    <svg class="trend-line" id="financial-trend" viewBox="0 0 60 20" preserveAspectRatio="none">
-                        <polyline class="trend-path yellow" id="financial-path" points=""></polyline>
-                    </svg>
-                    <span class="metric-value" id="financial-value">60</span>
-                </div>
-            </div>
-            <div class="metric">
-                <span class="metric-name">Reputation:</span>
-                <div class="metric-info">
-                    <svg class="trend-line" id="reputation-trend" viewBox="0 0 60 20" preserveAspectRatio="none">
-                        <polyline class="trend-path yellow" id="reputation-path" points=""></polyline>
-                    </svg>
-                    <span class="metric-value" id="reputation-value">65</span>
-                </div>
-            </div>
-            <div class="metric">
-                <span class="metric-name">Research:</span>
-                <div class="metric-info">
-                    <svg class="trend-line" id="research-trend" viewBox="0 0 60 20" preserveAspectRatio="none">
-                        <polyline class="trend-path yellow" id="research-path" points=""></polyline>
-                    </svg>
-                    <span class="metric-value" id="research-value">70</span>
-                </div>
-            </div>
-            <div class="metric">
-                <span class="metric-name">Staff Morale:</span>
-                <div class="metric-info">
-                    <svg class="trend-line" id="staff-trend" viewBox="0 0 60 20" preserveAspectRatio="none">
-                        <polyline class="trend-path yellow" id="staff-path" points=""></polyline>
-                    </svg>
-                    <span class="metric-value" id="staff-value">55</span>
-                </div>
-            </div>
-            <div class="metric">
-                <span class="metric-name">Students:</span>
-                <div class="metric-info">
-                    <svg class="trend-line" id="student-trend" viewBox="0 0 60 20" preserveAspectRatio="none">
-                        <polyline class="trend-path yellow" id="student-path" points=""></polyline>
-                    </svg>
-                    <span class="metric-value" id="student-value">60</span>
-                </div>
-            </div>
-            <div class="metric">
-                <span class="metric-name">Local Impact:</span>
-                <div class="metric-info">
-                    <svg class="trend-line" id="local-trend" viewBox="0 0 60 20" preserveAspectRatio="none">
-                        <polyline class="trend-path yellow" id="local-path" points=""></polyline>
-                    </svg>
-                    <span class="metric-value" id="local-value">50</span>
+        <!-- Scenario Display -->
+        <div class="scenario-container pixel-border">
+            <div class="scenario-card pixel-border" id="scenario-card">
+                <div class="scenario-title" id="scenario-title">Loading...</div>
+                <div class="scenario-description" id="scenario-description">Preparing your first challenge...</div>
+                <div class="choices-container" id="choices-container">
+                    <!-- Choice buttons will be inserted here -->
                 </div>
             </div>
         </div>
         
-        <div class="scenario" id="scenario-container">
-            <!-- Scenario content will be inserted here -->
-        </div>
-        
-        <div id="results-container" style="display: none;">
-            <!-- Results will be shown here -->
+        <!-- Results Display -->
+        <div class="results-container pixel-border hidden" id="results-container">
+            <div class="results-card pixel-border">
+                <div class="results-title" id="results-title">Results</div>
+                <div id="results-content">
+                    <!-- Results content will be inserted here -->
+                </div>
+                <button class="continue-button pixel-border" id="continue-button" onclick="nextScenario()">
+                    Continue to Next Month
+                </button>
+            </div>
         </div>
     </div>
 
     <script>
-        // Game state
+        // Game state - keeping your original logic
         let gameState = {
             currentScenario: 0,
             currentMonth: 0,
@@ -375,66 +714,6 @@
                 staff: 55,
                 student: 60,
                 local: 50
-            },
-            research: {
-                title: "RESEARCH COLLAPSE",
-                description: "The university's research quality has plummeted. Grant applications are being rejected, top researchers are leaving, and the institution risks losing its research status entirely. Academic credibility is in freefall.",
-                choices: [
-                    {
-                        label: "Community Crisis Response",
-                        description: "Democratic research revival through collaborative projects",
-                        effects: { financial: -10, reputation: 10, research: 25, staff: 15, student: 5, local: 10 },
-                        culture: "community"
-                    },
-                    {
-                        label: "Individualistic Crisis Response",
-                        description: "Recruit star researchers with massive funding packages",
-                        effects: { financial: -25, reputation: 15, research: 35, staff: -10, student: 5, local: 0 },
-                        culture: "individualistic"
-                    },
-                    {
-                        label: "Corporate Crisis Response",
-                        description: "Strategic research focus and systematic quality improvement",
-                        effects: { financial: -15, reputation: 20, research: 30, staff: 5, student: 0, local: 5 },
-                        culture: "corporate"
-                    },
-                    {
-                        label: "Nurturing Crisis Response",
-                        description: "Support existing researchers and create collaborative environment",
-                        effects: { financial: -20, reputation: 15, research: 25, staff: 20, student: 10, local: 15 },
-                        culture: "nurturing"
-                    }
-                ]
-            },
-            local: {
-                title: "COMMUNITY BACKLASH",
-                description: "The local community has turned against the university. Town-gown relations are at breaking point, local politicians are hostile, and community support has evaporated. The university is seen as disconnected and arrogant.",
-                choices: [
-                    {
-                        label: "Community Crisis Response",
-                        description: "Full community engagement and democratic dialogue with local leaders",
-                        effects: { financial: 10, reputation: 20, research: 0, staff: 10, student: 10, local: 30 },
-                        culture: "community"
-                    },
-                    {
-                        label: "Individualistic Crisis Response",
-                        description: "Focus on university excellence, ignore local criticism",
-                        effects: { financial: 5, reputation: -5, research: 10, staff: 0, student: -5, local: -10 },
-                        culture: "individualistic"
-                    },
-                    {
-                        label: "Corporate Crisis Response",
-                        description: "Professional community relations and strategic partnerships",
-                        effects: { financial: 15, reputation: 15, research: 5, staff: 5, student: 5, local: 25 },
-                        culture: "corporate"
-                    },
-                    {
-                        label: "Nurturing Crisis Response",
-                        description: "Comprehensive community service and local needs focus",
-                        effects: { financial: 5, reputation: 25, research: 10, staff: 15, student: 20, local: 35 },
-                        culture: "nurturing"
-                    }
-                ]
             },
             metricsHistory: {
                 financial: [60],
@@ -452,138 +731,8 @@
             }
         };
 
-        // Crisis scenarios that trigger when metrics hit red zone
-        const crisisScenarios = {
-            financial: {
-                title: "FINANCIAL EMERGENCY",
-                description: "The university faces immediate insolvency. Creditors are demanding payment, staff haven't been paid, and operations may cease within weeks. Emergency action required!",
-                choices: [
-                    {
-                        label: "Community Crisis Response",
-                        description: "Emergency campus-wide meeting to find collective solutions",
-                        effects: { financial: 15, reputation: 10, research: -10, staff: 10, student: 5, local: 15 },
-                        culture: "community"
-                    },
-                    {
-                        label: "Individualistic Crisis Response", 
-                        description: "Immediate closure of failing departments, protect profitable areas",
-                        effects: { financial: 25, reputation: -5, research: 5, staff: -20, student: -15, local: -10 },
-                        culture: "individualistic"
-                    },
-                    {
-                        label: "Corporate Crisis Response",
-                        description: "Professional emergency restructuring and asset liquidation",
-                        effects: { financial: 30, reputation: 5, research: -5, staff: -15, student: -10, local: -5 },
-                        culture: "corporate"
-                    },
-                    {
-                        label: "Nurturing Crisis Response",
-                        description: "Seek emergency community support and government intervention",
-                        effects: { financial: 20, reputation: 15, research: 0, staff: 15, student: 10, local: 20 },
-                        culture: "nurturing"
-                    }
-                ]
-            },
-            staff: {
-                title: "STAFF REVOLT",
-                description: "University staff have called an indefinite strike. Picket lines surround campus, teaching has stopped, and media coverage is damaging. Students are demanding fee refunds.",
-                choices: [
-                    {
-                        label: "Community Crisis Response",
-                        description: "Negotiate openly with union representatives for fair resolution",
-                        effects: { financial: -10, reputation: 15, research: -5, staff: 25, student: 10, local: 20 },
-                        culture: "community"
-                    },
-                    {
-                        label: "Individualistic Crisis Response",
-                        description: "Break the strike by hiring replacement staff and tough negotiations",
-                        effects: { financial: -15, reputation: -10, research: -10, staff: -15, student: -20, local: -15 },
-                        culture: "individualistic"
-                    },
-                    {
-                        label: "Corporate Crisis Response",
-                        description: "Professional mediation and systematic compromise package",
-                        effects: { financial: -5, reputation: 5, research: 0, staff: 15, student: 5, local: 10 },
-                        culture: "corporate"
-                    },
-                    {
-                        label: "Nurturing Crisis Response",
-                        description: "Address underlying wellbeing issues comprehensively",
-                        effects: { financial: -20, reputation: 20, research: 5, staff: 30, student: 15, local: 25 },
-                        culture: "nurturing"
-                    }
-                ]
-            },
-            student: {
-                title: "STUDENT UPRISING",
-                description: "Students have occupied the main building demanding immediate changes. Social media campaigns are going viral, parents are withdrawing children, and enrollment for next year is collapsing.",
-                choices: [
-                    {
-                        label: "Community Crisis Response",
-                        description: "Join students in democratic reform discussions",
-                        effects: { financial: -5, reputation: 10, research: -5, staff: 15, student: 25, local: 15 },
-                        culture: "community"
-                    },
-                    {
-                        label: "Individualistic Crisis Response",
-                        description: "Clear the occupation and focus on high-achieving students only",
-                        effects: { financial: 5, reputation: -15, research: 5, staff: -10, student: -20, local: -10 },
-                        culture: "individualistic"
-                    },
-                    {
-                        label: "Corporate Crisis Response",
-                        description: "Professional crisis management and structured student engagement",
-                        effects: { financial: 0, reputation: 0, research: 0, staff: 5, student: 15, local: 5 },
-                        culture: "corporate"
-                    },
-                    {
-                        label: "Nurturing Crisis Response",
-                        description: "Comprehensive response to student needs and concerns",
-                        effects: { financial: -15, reputation: 15, research: 0, staff: 10, student: 30, local: 20 },
-                        culture: "nurturing"
-                    }
-                ]
-            },
-            reputation: {
-                title: "REPUTATION COLLAPSE",
-                description: "National media coverage has destroyed the university's reputation. Enrollment is plummeting, staff are leaving, and funding bodies are reconsidering support. The institution's survival is threatened.",
-                choices: [
-                    {
-                        label: "Community Crisis Response",
-                        description: "Transparent community response showing authentic change",
-                        effects: { financial: -10, reputation: 20, research: 0, staff: 15, student: 10, local: 25 },
-                        culture: "community"
-                    },
-                    {
-                        label: "Individualistic Crisis Response",
-                        description: "Aggressive PR campaign highlighting individual successes",
-                        effects: { financial: -5, reputation: 15, research: 10, staff: -5, student: 0, local: -5 },
-                        culture: "individualistic"
-                    },
-                    {
-                        label: "Corporate Crisis Response",
-                        description: "Professional reputation management and systematic reform",
-                        effects: { financial: 5, reputation: 25, research: 0, staff: 5, student: 5, local: 10 },
-                        culture: "corporate"
-                    },
-                    {
-                        label: "Nurturing Crisis Response",
-                        description: "Focus on serving community needs regardless of external opinion",
-                        effects: { financial: -5, reputation: 15, research: 10, staff: 20, student: 20, local: 30 },
-                        culture: "nurturing"
-                    }
-                ]
-            }
-        };
-        const months = [
-            "September", "October", "November", "December", 
-            "January", "February", "March", "April", 
-            "May", "June", "July", "August"
-        ];
-
-        // Complete 48 scenarios for the full game
+        // Complete scenarios array - proper 4-year crisis simulation
         const scenarios = [
-            // YEAR 1: PANDEMIC YEAR
             {
                 title: "Enrollment Surge Crisis",
                 description: "Expected 3,000 students but 3,500 enrolled. Accommodation full, lecture halls overcrowded, staff stretched thin. Extra fees could help budget but quality suffers.",
@@ -736,7 +885,7 @@
             },
             {
                 title: "Lockdown Chaos",
-                description: "Government lockdown announced. Campus closed, online teaching overnight. Students demand fee reductions, staff struggle with tech, parents furious about 'Zoom University.'",
+                description: "Government lockdown announced. Campus closed, online teaching overnight. Students demand fee reductions, staff struggle with tech.",
                 choices: [
                     {
                         label: "Community Response",
@@ -760,66 +909,6 @@
                         label: "Nurturing Response",
                         description: "Individual support for every student and staff member",
                         effects: { financial: -30, reputation: 15, research: 5, staff: 25, student: 25, local: 15 },
-                        culture: "nurturing"
-                    }
-                ]
-            },
-            {
-                title: "Online Teaching Disaster",
-                description: "Tech-savvy staff thriving, others struggling. Student engagement dropping, time zone issues, digital divide excluding poorer students.",
-                choices: [
-                    {
-                        label: "Community Response",
-                        description: "Peer teaching networks - mutual support",
-                        effects: { financial: -5, reputation: 5, research: -5, staff: 15, student: 10, local: 10 },
-                        culture: "community"
-                    },
-                    {
-                        label: "Individualistic Response",
-                        description: "Best content wins - market forces determine quality",
-                        effects: { financial: 10, reputation: 0, research: 10, staff: -10, student: -15, local: -5 },
-                        culture: "individualistic"
-                    },
-                    {
-                        label: "Corporate Response",
-                        description: "Standardized platform, training, metrics",
-                        effects: { financial: 15, reputation: 5, research: 0, staff: -10, student: -10, local: 0 },
-                        culture: "corporate"
-                    },
-                    {
-                        label: "Nurturing Response",
-                        description: "Individual support, flexible approaches, no one left behind",
-                        effects: { financial: -20, reputation: 10, research: 5, staff: 10, student: 20, local: 15 },
-                        culture: "nurturing"
-                    }
-                ]
-            },
-            {
-                title: "Fee Revolt",
-                description: "Mass student protests about full fees for online education. #RefundOurFees going viral. Parents threatening legal action. Next year enrollment uncertain.",
-                choices: [
-                    {
-                        label: "Community Response",
-                        description: "Open negotiation with student representatives",
-                        effects: { financial: -15, reputation: 10, research: 0, staff: 5, student: 20, local: 15 },
-                        culture: "community"
-                    },
-                    {
-                        label: "Individualistic Response",
-                        description: "Hold firm - education still being delivered",
-                        effects: { financial: 20, reputation: -20, research: 0, staff: -10, student: -25, local: -10 },
-                        culture: "individualistic"
-                    },
-                    {
-                        label: "Corporate Response",
-                        description: "Partial refunds with service level agreements",
-                        effects: { financial: -5, reputation: 5, research: 0, staff: 0, student: 5, local: 5 },
-                        culture: "corporate"
-                    },
-                    {
-                        label: "Nurturing Response",
-                        description: "Significant fee reduction - education is a right",
-                        effects: { financial: -30, reputation: 20, research: 0, staff: 15, student: 30, local: 20 },
                         culture: "nurturing"
                     }
                 ]
@@ -855,778 +944,93 @@
                 ]
             },
             {
-                title: "Summer Planning Crisis",
-                description: "September planning with zero certainty. Online? Hybrid? Face-to-face? Every decision involves massive commitments with no guarantees.",
+                title: "Recovery Planning",
+                description: "First positive signs emerging. How do you build on early success while avoiding complacency?",
                 choices: [
                     {
                         label: "Community Response",
-                        description: "Scenario planning with entire campus community input",
-                        effects: { financial: -10, reputation: 5, research: -5, staff: 15, student: 10, local: 10 },
+                        description: "Collective celebration and shared future planning",
+                        effects: { financial: 10, reputation: 15, research: 10, staff: 20, student: 15, local: 20 },
                         culture: "community"
                     },
                     {
                         label: "Individualistic Response",
-                        description: "Multiple competing plans - back the winners",
-                        effects: { financial: 5, reputation: 5, research: 10, staff: -15, student: -5, local: 0 },
+                        description: "Reward excellence, maintain competitive pressure",
+                        effects: { financial: 20, reputation: 20, research: 25, staff: 5, student: 10, local: 5 },
                         culture: "individualistic"
                     },
                     {
                         label: "Corporate Response",
-                        description: "Data-driven decision making with clear metrics",
-                        effects: { financial: 15, reputation: 10, research: 0, staff: 5, student: 5, local: 5 },
+                        description: "Strategic consolidation and systematic improvement",
+                        effects: { financial: 25, reputation: 15, research: 15, staff: 10, student: 10, local: 10 },
                         culture: "corporate"
                     },
                     {
                         label: "Nurturing Response",
-                        description: "Plan for maximum flexibility to support all needs",
-                        effects: { financial: -25, reputation: 10, research: 5, staff: 20, student: 20, local: 15 },
-                        culture: "nurturing"
-                    }
-                ]
-            },
-            {
-                title: "Staff Burnout Peak",
-                description: "Critical staff exhaustion. Physical and mental health problems. Support staff overwhelmed. Union threatening strike over working conditions.",
-                choices: [
-                    {
-                        label: "Community Response",
-                        description: "Collective support networks and shared workload",
-                        effects: { financial: -10, reputation: 5, research: 5, staff: 25, student: 10, local: 10 },
-                        culture: "community"
-                    },
-                    {
-                        label: "Individualistic Response",
-                        description: "Reward resilient performers, replace those who can't cope",
-                        effects: { financial: 10, reputation: -5, research: 15, staff: -30, student: -15, local: -10 },
-                        culture: "individualistic"
-                    },
-                    {
-                        label: "Corporate Response",
-                        description: "Professional wellbeing programs and efficiency improvements",
-                        effects: { financial: 5, reputation: 5, research: 0, staff: 10, student: 0, local: 5 },
-                        culture: "corporate"
-                    },
-                    {
-                        label: "Nurturing Response",
-                        description: "Comprehensive mental health support and workload reduction",
-                        effects: { financial: -25, reputation: 10, research: 10, staff: 35, student: 15, local: 15 },
-                        culture: "nurturing"
-                    }
-                ]
-            },
-            {
-                title: "Redundancy Consultations",
-                description: "Budget mathematics are brutal. Must cut staff costs to survive. Union demanding meetings, media investigating, affected staff devastated.",
-                choices: [
-                    {
-                        label: "Community Response",
-                        description: "Democratic selection process with affected staff having voice",
-                        effects: { financial: 15, reputation: 10, research: 0, staff: 5, student: 5, local: 10 },
-                        culture: "community"
-                    },
-                    {
-                        label: "Individualistic Response",
-                        description: "Merit-based cuts - protect best, remove rest",
-                        effects: { financial: 25, reputation: 0, research: 20, staff: -25, student: -10, local: -5 },
-                        culture: "individualistic"
-                    },
-                    {
-                        label: "Corporate Response",
-                        description: "Objective criteria-based redundancies with professional process",
-                        effects: { financial: 30, reputation: 5, research: 0, staff: -15, student: -5, local: -5 },
-                        culture: "corporate"
-                    },
-                    {
-                        label: "Nurturing Response",
-                        description: "Voluntary severance and retraining before compulsory cuts",
-                        effects: { financial: 5, reputation: 15, research: 5, staff: 15, student: 10, local: 15 },
-                        culture: "nurturing"
-                    }
-                ]
-            },
-
-            // YEAR 2: SCANDAL YEAR
-            {
-                title: "New Term Under Cloud",
-                description: "New academic year begins with rock-bottom morale after summer redundancies. Remaining staff covering extra duties, increased class sizes, institution just surviving.",
-                choices: [
-                    {
-                        label: "Community Response",
-                        description: "Rebuild morale through collaborative recovery planning",
-                        effects: { financial: -10, reputation: 5, research: 5, staff: 15, student: 10, local: 10 },
-                        culture: "community"
-                    },
-                    {
-                        label: "Individualistic Response",
-                        description: "Fresh start - recruit new talent and drive excellence",
-                        effects: { financial: -15, reputation: 10, research: 15, staff: -10, student: 5, local: 0 },
-                        culture: "individualistic"
-                    },
-                    {
-                        label: "Corporate Response",
-                        description: "Streamlined operations with clear performance expectations",
-                        effects: { financial: 10, reputation: 5, research: 0, staff: -5, student: -5, local: 0 },
-                        culture: "corporate"
-                    },
-                    {
-                        label: "Nurturing Response",
-                        description: "Focus on healing and rebuilding community trust",
-                        effects: { financial: -15, reputation: 10, research: 10, staff: 25, student: 20, local: 15 },
-                        culture: "nurturing"
-                    }
-                ]
-            },
-            {
-                title: "Morale at All-Time Low",
-                description: "Staff satisfaction surveys reveal devastating results. Workload stress, job insecurity, colleague loss creating toxic atmosphere affecting teaching quality.",
-                choices: [
-                    {
-                        label: "Community Response",
-                        description: "Create healing circles and peer support networks",
-                        effects: { financial: -5, reputation: 5, research: 10, staff: 20, student: 15, local: 10 },
-                        culture: "community"
-                    },
-                    {
-                        label: "Individualistic Response",
-                        description: "Focus resources on high performers, let others leave",
-                        effects: { financial: 15, reputation: -5, research: 10, staff: -20, student: -15, local: -10 },
-                        culture: "individualistic"
-                    },
-                    {
-                        label: "Corporate Response",
-                        description: "Professional development and performance management",
-                        effects: { financial: 5, reputation: 5, research: 0, staff: 5, student: 0, local: 5 },
-                        culture: "corporate"
-                    },
-                    {
-                        label: "Nurturing Response",
-                        description: "Comprehensive wellbeing program and workload redistribution",
-                        effects: { financial: -20, reputation: 10, research: 15, staff: 30, student: 25, local: 15 },
-                        culture: "nurturing"
-                    }
-                ]
-            },
-            // Adding more scenarios - continuing from Year 2
-            {
-                title: "Government Funding Cuts",
-                description: "Government announces another 15% funding cut over two years, on top of existing pressures. Threatens any recovery being built.",
-                choices: [
-                    {
-                        label: "Community Response",
-                        description: "Unite campus community to lobby against cuts together",
-                        effects: { financial: -5, reputation: 15, research: 0, staff: 10, student: 10, local: 20 },
-                        culture: "community"
-                    },
-                    {
-                        label: "Individualistic Response",
-                        description: "Compete aggressively for remaining funding streams",
-                        effects: { financial: 10, reputation: 5, research: 15, staff: -10, student: -5, local: -5 },
-                        culture: "individualistic"
-                    },
-                    {
-                        label: "Corporate Response",
-                        description: "Diversify income streams, reduce government dependency",
-                        effects: { financial: 20, reputation: 10, research: 0, staff: -5, student: -10, local: -5 },
-                        culture: "corporate"
-                    },
-                    {
-                        label: "Nurturing Response",
-                        description: "Maintain educational quality despite reduced resources",
-                        effects: { financial: -15, reputation: 10, research: 5, staff: 10, student: 15, local: 15 },
-                        culture: "nurturing"
-                    }
-                ]
-            },
-            {
-                title: "Leaked Emails Scandal",
-                description: "Internal emails about planned cuts leaked to press. Emails reveal senior management discussing department closures and staff targeting. Campus anger and suspicion explode.",
-                choices: [
-                    {
-                        label: "Community Response",
-                        description: "Full transparency - publish all decision-making processes",
-                        effects: { financial: -5, reputation: 20, research: 0, staff: 15, student: 10, local: 15 },
-                        culture: "community"
-                    },
-                    {
-                        label: "Individualistic Response",
-                        description: "Focus on leak source - discipline and move on",
-                        effects: { financial: 5, reputation: -15, research: 0, staff: -20, student: -15, local: -10 },
-                        culture: "individualistic"
-                    },
-                    {
-                        label: "Corporate Response",
-                        description: "Professional investigation, improved communication protocols",
-                        effects: { financial: 5, reputation: 5, research: 0, staff: -5, student: -5, local: 0 },
-                        culture: "corporate"
-                    },
-                    {
-                        label: "Nurturing Response",
-                        description: "Acknowledge hurt caused, rebuild trust through actions",
-                        effects: { financial: -10, reputation: 15, research: 10, staff: 25, student: 20, local: 20 },
-                        culture: "nurturing"
-                    }
-                ]
-            },
-            {
-                title: "Senior Management Corruption Exposed",
-                description: "Investigative journalists reveal financial irregularities. Contracts to friends, expense abuse, potential embezzlement. National news dominates, reputation severely damaged.",
-                choices: [
-                    {
-                        label: "Community Response",
-                        description: "Immediate democratic oversight of all financial decisions",
-                        effects: { financial: -15, reputation: 10, research: 0, staff: 20, student: 15, local: 20 },
-                        culture: "community"
-                    },
-                    {
-                        label: "Individualistic Response",
-                        description: "Replace corrupt individuals with high-caliber leaders",
-                        effects: { financial: -20, reputation: 15, research: 10, staff: -5, student: 5, local: 0 },
-                        culture: "individualistic"
-                    },
-                    {
-                        label: "Corporate Response",
-                        description: "Professional audit and governance reforms",
-                        effects: { financial: 10, reputation: 20, research: 0, staff: 5, student: 5, local: 10 },
-                        culture: "corporate"
-                    },
-                    {
-                        label: "Nurturing Response",
-                        description: "Focus on healing community trust and rebuilding together",
-                        effects: { financial: -20, reputation: 15, research: 15, staff: 25, student: 20, local: 25 },
-                        culture: "nurturing"
-                    }
-                ]
-            },
-            {
-                title: "Political Protection Scandal",
-                description: "UK Prime Minister offered honors to protect university scandal figures. Massive political firestorm. Institution at center of national corruption story involving highest government levels.",
-                choices: [
-                    {
-                        label: "Community Response",
-                        description: "Stand with affected staff and students against political corruption",
-                        effects: { financial: -10, reputation: 25, research: 0, staff: 30, student: 25, local: 30 },
-                        culture: "community"
-                    },
-                    {
-                        label: "Individualistic Response",
-                        description: "Distance institution from scandal, focus on excellence",
-                        effects: { financial: 5, reputation: -10, research: 10, staff: -15, student: 0, local: -10 },
-                        culture: "individualistic"
-                    },
-                    {
-                        label: "Corporate Response",
-                        description: "Professional crisis management and reputation protection",
-                        effects: { financial: 10, reputation: 15, research: 0, staff: 0, student: -5, local: 5 },
-                        culture: "corporate"
-                    },
-                    {
-                        label: "Nurturing Response",
-                        description: "Support all community members affected by scandal",
-                        effects: { financial: -25, reputation: 20, research: 10, staff: 35, student: 30, local: 35 },
-                        culture: "nurturing"
-                    }
-                ]
-            },
-            {
-                title: "Staff and Student Protests",
-                description: "Accumulated stress explodes into campus-wide protests. Students and staff unite demanding change, better conditions, accountability. National media attention, additional leadership pressure.",
-                choices: [
-                    {
-                        label: "Community Response",
-                        description: "Join protests - leadership stands with community",
-                        effects: { financial: -15, reputation: 20, research: 0, staff: 35, student: 30, local: 30 },
-                        culture: "community"
-                    },
-                    {
-                        label: "Individualistic Response",
-                        description: "Let protests burn out while focusing on high performers",
-                        effects: { financial: 10, reputation: -15, research: 5, staff: -25, student: -30, local: -20 },
-                        culture: "individualistic"
-                    },
-                    {
-                        label: "Corporate Response",
-                        description: "Professional mediation and structured negotiation",
-                        effects: { financial: 5, reputation: 10, research: 0, staff: 10, student: 10, local: 10 },
-                        culture: "corporate"
-                    },
-                    {
-                        label: "Nurturing Response",
-                        description: "Listen deeply, commit to fundamental change",
-                        effects: { financial: -30, reputation: 25, research: 15, staff: 40, student: 35, local: 40 },
-                        culture: "nurturing"
-                    }
-                ]
-            },
-            {
-                title: "Scottish Government Intervention",
-                description: "Scottish Government announces emergency intervention to save jobs and maintain educational provision. Welcome financial relief but loss of institutional autonomy. Government representatives oversee major decisions.",
-                choices: [
-                    {
-                        label: "Community Response",
-                        description: "Embrace government partnership for democratic accountability",
-                        effects: { financial: 25, reputation: 10, research: 0, staff: 20, student: 15, local: 25 },
-                        culture: "community"
-                    },
-                    {
-                        label: "Individualistic Response",
-                        description: "Negotiate maximum institutional independence",
-                        effects: { financial: 15, reputation: 5, research: 10, staff: 5, student: 0, local: 5 },
-                        culture: "individualistic"
-                    },
-                    {
-                        label: "Corporate Response",
-                        description: "Professional partnership with clear governance structures",
-                        effects: { financial: 30, reputation: 15, research: 0, staff: 15, student: 10, local: 20 },
-                        culture: "corporate"
-                    },
-                    {
-                        label: "Nurturing Response",
-                        description: "Grateful acceptance focused on serving educational mission",
-                        effects: { financial: 20, reputation: 15, research: 15, staff: 25, student: 20, local: 30 },
-                        culture: "nurturing"
-                    }
-                ]
-            },
-
-            // YEAR 3: ROAD TO RECOVERY
-            {
-                title: "New Leadership Question",
-                description: "New academic year begins with leadership question. Bring in new management, promote from within, or maintain continuity? Choice signals recovery direction and determines stakeholder confidence.",
-                choices: [
-                    {
-                        label: "Community Response",
-                        description: "Democratically elect new leadership from community",
-                        effects: { financial: -5, reputation: 15, research: 10, staff: 25, student: 20, local: 20 },
-                        culture: "community"
-                    },
-                    {
-                        label: "Individualistic Response",
-                        description: "Recruit high-profile external leader to drive excellence",
-                        effects: { financial: -15, reputation: 25, research: 20, staff: -10, student: 5, local: 0 },
-                        culture: "individualistic"
-                    },
-                    {
-                        label: "Corporate Response",
-                        description: "Professional headhunting for experienced manager",
-                        effects: { financial: 15, reputation: 15, research: 0, staff: 5, student: 5, local: 5 },
-                        culture: "corporate"
-                    },
-                    {
-                        label: "Nurturing Response",
-                        description: "Promote caring leaders who understand community needs",
-                        effects: { financial: 5, reputation: 15, research: 15, staff: 30, student: 25, local: 25 },
-                        culture: "nurturing"
-                    }
-                ]
-            },
-            {
-                title: "First Positive Media Coverage",
-                description: "After months of negative press, first genuinely positive stories appear. How institution handles this turning point influences whether positive momentum continues or stalls.",
-                choices: [
-                    {
-                        label: "Community Response",
-                        description: "Share credit widely across entire campus community",
-                        effects: { financial: 5, reputation: 15, research: 15, staff: 30, student: 25, local: 25 },
-                        culture: "community"
-                    },
-                    {
-                        label: "Individualistic Response",
-                        description: "Leverage success to attract more high performers",
-                        effects: { financial: 15, reputation: 20, research: 25, staff: 5, student: 10, local: 5 },
-                        culture: "individualistic"
-                    },
-                    {
-                        label: "Corporate Response",
-                        description: "Strategic communication to maximize positive impact",
-                        effects: { financial: 20, reputation: 35, research: 0, staff: 10, student: 10, local: 15 },
-                        culture: "corporate"
-                    },
-                    {
-                        label: "Nurturing Response",
-                        description: "Use positive attention to highlight educational mission",
-                        effects: { financial: 5, reputation: 25, research: 25, staff: 25, student: 30, local: 30 },
-                        culture: "nurturing"
-                    }
-                ]
-            },
-            {
-                title: "Quality Inspection Arrives",
-                description: "External quality inspectors arrive for comprehensive review of teaching, research, and governance. First major external validation since crisis, results will significantly influence future reputation and funding.",
-                choices: [
-                    {
-                        label: "Community Response",
-                        description: "Showcase collaborative achievements and democratic governance",
-                        effects: { financial: 10, reputation: 25, research: 20, staff: 25, student: 20, local: 25 },
-                        culture: "community"
-                    },
-                    {
-                        label: "Individualistic Response",
-                        description: "Highlight individual excellence and competitive achievements",
-                        effects: { financial: 15, reputation: 30, research: 35, staff: 10, student: 15, local: 5 },
-                        culture: "individualistic"
-                    },
-                    {
-                        label: "Corporate Response",
-                        description: "Professional presentation of systematic improvements",
-                        effects: { financial: 25, reputation: 40, research: 15, staff: 15, student: 15, local: 15 },
-                        culture: "corporate"
-                    },
-                    {
-                        label: "Nurturing Response",
-                        description: "Demonstrate commitment to holistic student development",
-                        effects: { financial: 10, reputation: 30, research: 30, staff: 30, student: 40, local: 30 },
-                        culture: "nurturing"
-                    }
-                ]
-            },
-            {
-                title: "Staff Retention Success",
-                description: "Summer brings annual academic job movements. Whether university can retain key staff and attract new talent indicates recovery success and influences final year prospects.",
-                choices: [
-                    {
-                        label: "Community Response",
-                        description: "Collective commitment to staying and building together",
-                        effects: { financial: 20, reputation: 15, research: 25, staff: 35, student: 20, local: 25 },
-                        culture: "community"
-                    },
-                    {
-                        label: "Individualistic Response",
-                        description: "Competitive packages to retain and attract stars",
-                        effects: { financial: -15, reputation: 30, research: 40, staff: 10, student: 15, local: 5 },
-                        culture: "individualistic"
-                    },
-                    {
-                        label: "Corporate Response",
-                        description: "Strategic retention based on institutional priorities",
-                        effects: { financial: 25, reputation: 15, research: 20, staff: 15, student: 10, local: 10 },
-                        culture: "corporate"
-                    },
-                    {
-                        label: "Nurturing Response",
-                        description: "Comprehensive support for all staff development and wellbeing",
-                        effects: { financial: -10, reputation: 20, research: 35, staff: 45, student: 30, local: 30 },
-                        culture: "nurturing"
-                    }
-                ]
-            },
-
-            // YEAR 4: BACK ON TOP?
-            {
-                title: "Fresh Start or Same Old Problems?",
-                description: "Final academic year begins with question of whether genuine transformation occurred or institution simply returned to pre-crisis patterns. Early indicators set expectations for year ahead.",
-                choices: [
-                    {
-                        label: "Community Response",
-                        description: "Celebrate transformation while staying vigilant about democratic values",
-                        effects: { financial: 15, reputation: 25, research: 20, staff: 30, student: 25, local: 30 },
-                        culture: "community"
-                    },
-                    {
-                        label: "Individualistic Response",
-                        description: "Ambitious drive for sector leadership and excellence",
-                        effects: { financial: 25, reputation: 40, research: 35, staff: 15, student: 15, local: 10 },
-                        culture: "individualistic"
-                    },
-                    {
-                        label: "Corporate Response",
-                        description: "Professional assessment of transformation and strategic next steps",
-                        effects: { financial: 35, reputation: 30, research: 20, staff: 20, student: 20, local: 20 },
-                        culture: "corporate"
-                    },
-                    {
-                        label: "Nurturing Response",
-                        description: "Genuine transformation rooted in caring community values",
-                        effects: { financial: 20, reputation: 30, research: 35, staff: 40, student: 40, local: 40 },
-                        culture: "nurturing"
-                    }
-                ]
-            },
-            {
-                title: "Research Funding Results",
-                description: "Major research funding decisions announced, providing crucial test of whether academic community has genuinely recovered research excellence and external confidence in institution.",
-                choices: [
-                    {
-                        label: "Community Response",
-                        description: "Collaborative research success shared across community",
-                        effects: { financial: 30, reputation: 25, research: 40, staff: 35, student: 20, local: 30 },
-                        culture: "community"
-                    },
-                    {
-                        label: "Individualistic Response",
-                        description: "Star researchers achieve breakthrough funding success",
-                        effects: { financial: 40, reputation: 40, research: 50, staff: 10, student: 15, local: 10 },
-                        culture: "individualistic"
-                    },
-                    {
-                        label: "Corporate Response",
-                        description: "Strategic research portfolio achieves systematic funding success",
-                        effects: { financial: 45, reputation: 35, research: 35, staff: 20, student: 15, local: 20 },
-                        culture: "corporate"
-                    },
-                    {
-                        label: "Nurturing Response",
-                        description: "Mission-driven research addressing community and global needs",
-                        effects: { financial: 25, reputation: 30, research: 45, staff: 35, student: 30, local: 35 },
-                        culture: "nurturing"
-                    }
-                ]
-            },
-            {
-                title: "Final Assessment",
-                description: "Final scenario asks fundamental question about institutional transformation. What kind of institution has been built through four years of crisis and recovery choices?",
-                choices: [
-                    {
-                        label: "Community Response",
-                        description: "Democratic institution serving community needs through collaborative governance",
-                        effects: { financial: 10, reputation: 25, research: 25, staff: 40, student: 35, local: 45 },
-                        culture: "community"
-                    },
-                    {
-                        label: "Individualistic Response",
-                        description: "Excellence-driven institution achieving competitive sector leadership",
-                        effects: { financial: 30, reputation: 45, research: 40, staff: 15, student: 20, local: 10 },
-                        culture: "individualistic"
-                    },
-                    {
-                        label: "Corporate Response",
-                        description: "Professionally managed institution delivering systematic educational services",
-                        effects: { financial: 40, reputation: 30, research: 30, staff: 25, student: 25, local: 20 },
-                        culture: "corporate"
-                    },
-                    {
-                        label: "Nurturing Response",
-                        description: "Caring institution prioritizing human flourishing and community service",
-                        effects: { financial: 20, reputation: 35, research: 35, staff: 45, student: 50, local: 50 },
+                        description: "Holistic community healing and sustainable growth",
+                        effects: { financial: 15, reputation: 20, research: 20, staff: 25, student: 25, local: 25 },
                         culture: "nurturing"
                     }
                 ]
             }
         ];
 
-        function checkForCrisisInterrupt() {
-            console.log("Checking for crisis interrupt...");
-            console.log("Current metrics:", gameState.metrics);
-            
-            // Check if any metric has hit the red zone and needs crisis intervention
-            const crisisMetrics = [];
-            
-            Object.keys(gameState.metrics).forEach(metric => {
-                console.log(`Checking ${metric}: ${gameState.metrics[metric]} < 40? ${gameState.metrics[metric] < 40}`);
-                console.log(`Crisis scenario exists for ${metric}?`, !!crisisScenarios[metric]);
-                
-                if (gameState.metrics[metric] < 40 && crisisScenarios[metric]) {
-                    crisisMetrics.push(metric);
-                    console.log(`Added ${metric} to crisis list`);
-                }
-            });
-            
-            console.log("Crisis metrics found:", crisisMetrics);
-            
-            // If multiple crises, prioritize by severity
-            if (crisisMetrics.length > 0) {
-                const priorityOrder = ['financial', 'staff', 'student', 'reputation', 'research', 'local'];
-                const selectedCrisis = crisisMetrics.sort((a, b) => 
-                    priorityOrder.indexOf(a) - priorityOrder.indexOf(b)
-                )[0];
-                
-                console.log("Selected crisis:", selectedCrisis);
-                return selectedCrisis;
-            }
-            
-            console.log("No crisis detected");
-            return null;
-        }
+        const months = [
+            "September", "October", "November", "December", 
+            "January", "February", "March", "April", 
+            "May", "June", "July", "August"
+        ];
 
-        function displayCrisisScenario(crisisType) {
-            console.log("Displaying crisis scenario for:", crisisType);
-            console.log("Crisis scenario data:", crisisScenarios[crisisType]);
-            
-            const crisis = crisisScenarios[crisisType];
-            
-            if (!crisis) {
-                console.error("No crisis scenario found for type:", crisisType);
-                return;
-            }
-            
-            const scenarioHTML = `
-                <div class="scenario-title" style="color: #ff6666;">🚨 ${crisis.title} 🚨</div>
-                <div class="scenario-description" style="border: 2px solid #ff6666; padding: 15px; background-color: #1a0000;">
-                    ${crisis.description}
-                </div>
-                <div class="choices">
-                    ${crisis.choices.map((choice, index) => `
-                        <button class="choice-button" onclick="makeCrisisChoice('${crisisType}', ${index})" style="border-color: #ff6666;">
-                            <div class="choice-label">${choice.label}</div>
-                            <div>${choice.description}</div>
-                        </button>
-                    `).join('')}
-                </div>
-            `;
-            
-            console.log("Setting crisis scenario HTML");
-            const scenarioContainer = document.getElementById('scenario-container');
-            if (scenarioContainer) {
-                scenarioContainer.innerHTML = scenarioHTML;
-                console.log("Crisis scenario HTML set successfully");
-            } else {
-                console.error("Could not find scenario-container element");
-            }
-        }
-
-        function makeCrisisChoice(crisisType, choiceIndex) {
-            const crisis = crisisScenarios[crisisType];
-            const choice = crisis.choices[choiceIndex];
-            
-            // Track cultural choice
-            gameState.culturalChoices[choice.culture]++;
-            
-            // Apply effects
-            const oldMetrics = {...gameState.metrics};
-            Object.keys(choice.effects).forEach(metric => {
-                gameState.metrics[metric] = Math.max(0, Math.min(100, gameState.metrics[metric] + choice.effects[metric]));
-            });
-            
-            // Apply cascade effects
-            const cascadeMessage = applyCascadeEffects();
-            const positiveMessage = applyPositiveCascades();
-            
-            // Update display
+        // Game functions
+        function startGame() {
+            document.getElementById('intro-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
             updateAllMetrics();
-            recordMetricsInHistory();
-            
-            // Show results with crisis context
-            showCrisisResults(choice, oldMetrics, cascadeMessage + positiveMessage, crisisType);
+            displayScenario();
         }
 
-        function showCrisisResults(choice, oldMetrics, cascadeMessage, crisisType) {
-            const triggers = checkTriggers(oldMetrics);
-            
-            let resultsHTML = `
-                <div class="results" style="border-color: #ff6666;">
-                    <div class="results-title" style="color: #ff6666;">🚨 CRISIS RESPONSE: ${choice.label}</div>
-                    <div style="margin-bottom: 15px; font-style: italic; color: #ffcccc;">"${choice.description}"</div>
-            `;
-            
-            // Show metric changes
-            Object.keys(choice.effects).forEach(metric => {
-                const change = choice.effects[metric];
-                const oldValue = oldMetrics[metric];
-                const newValue = gameState.metrics[metric];
-                const changeClass = change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral';
-                const changeStr = change > 0 ? `+${change}` : `${change}`;
-                
-                resultsHTML += `
-                    <div class="metric-change">
-                        ${metric.charAt(0).toUpperCase() + metric.slice(1)}: ${oldValue} → ${newValue} <span class="${changeClass}">(${changeStr})</span>
-                    </div>
-                `;
-            });
-            
-            if (cascadeMessage) {
-                resultsHTML += `<div style="margin-top: 15px; color: #ffff00;">${cascadeMessage}</div>`;
-            }
-            
-            if (triggers.length > 0) {
-                resultsHTML += `
-                    <div class="triggers">
-                        <div class="triggers-title">⚠️ TRIGGERED EVENTS:</div>
-                        ${triggers.map(trigger => `<div>• ${trigger}</div>`).join('')}
-                    </div>
-                `;
-            }
-            
-            resultsHTML += `
-                <div style="margin-top: 15px; padding: 10px; background-color: #0a0a1a; border-radius: 5px;">
-                    <strong style="color: #ff9999;">Crisis Status:</strong> 
-                    ${gameState.metrics[crisisType] >= 40 ? 
-                        '<span style="color: #00ff00;">Crisis resolved - back to normal operations</span>' : 
-                        '<span style="color: #ff6666;">Still in crisis - further intervention may be needed</span>'
-                    }
-                </div>
-                <button class="continue-button" onclick="nextScenario()">Continue Campus Management</button>
-            `;
-            
-            document.getElementById('results-container').innerHTML = resultsHTML;
-            document.getElementById('results-container').style.display = 'block';
-            document.getElementById('scenario-container').style.display = 'none';
-        }
         function getMetricZone(value) {
-            if (value >= 70) return "green";
-            if (value >= 40) return "yellow";
-            return "red";
+            if (value >= 70) return "good";
+            if (value >= 40) return "warn";
+            return "bad";
         }
 
         function updateMetricDisplay(metricId, value) {
             const element = document.getElementById(metricId + '-value');
             element.textContent = value;
             element.className = 'metric-value ' + getMetricZone(value);
-            
-            // Update trend line
-            updateTrendLine(metricId);
+            updateTrendDisplay(metricId);
         }
 
-        function updateTrendLine(metricId) {
+        function updateTrendDisplay(metricId) {
             const history = gameState.metricsHistory[metricId];
-            const pathElement = document.getElementById(metricId + '-path');
+            const trendContainer = document.getElementById(metricId + '-trend');
+            const bars = trendContainer.querySelectorAll('.trend-bar');
             
-            if (!pathElement || history.length < 1) {
-                console.log(`Could not find path element for ${metricId} or no history`);
+            if (history.length < 2) {
+                bars.forEach(bar => bar.className = 'trend-bar stable');
                 return;
             }
             
-            // Create points for the trend line (max 8 points to fit in 60px width)
-            const maxPoints = 8;
-            const recentHistory = history.slice(-maxPoints);
-            const width = 60;
-            const height = 20;
-            
-            console.log(`Updating trend for ${metricId}:`, recentHistory);
-            
-            if (recentHistory.length === 1) {
-                // Single point - draw horizontal line (neutral color)
-                const y = height - ((recentHistory[0] / 100) * height);
-                const points = `0,${y} ${width},${y}`;
-                pathElement.setAttribute('points', points);
-                pathElement.setAttribute('class', 'trend-path yellow');
-                console.log(`Single point for ${metricId}: ${points} - set to yellow`);
-            } else {
-                // Multiple points - draw connecting line
-                let points = recentHistory.map((value, index) => {
-                    const x = (index / (recentHistory.length - 1)) * width;
-                    const y = height - ((value / 100) * height);
-                    return `${x},${y}`;
-                }).join(' ');
-                
-                pathElement.setAttribute('points', points);
-                console.log(`Multiple points for ${metricId}: ${points}`);
-                
-                // Color based on trend direction between most recent decision points
-                const currentValue = recentHistory[recentHistory.length - 1];
-                const previousValue = recentHistory[recentHistory.length - 2];
-                const trend = currentValue - previousValue;
-                
-                let colorClass = '';
-                if (trend > 0) {
-                    colorClass = 'trend-path green';
-                    console.log(`${metricId} trending UP: ${previousValue} → ${currentValue} (+${trend}) - setting GREEN`);
-                } else if (trend < 0) {
-                    colorClass = 'trend-path red';
-                    console.log(`${metricId} trending DOWN: ${previousValue} → ${currentValue} (${trend}) - setting RED`);
+            const recent = history.slice(-4);
+            bars.forEach((bar, index) => {
+                if (index < recent.length - 1) {
+                    const current = recent[index + 1];
+                    const previous = recent[index];
+                    const diff = current - previous;
+                    
+                    if (diff > 0) {
+                        bar.className = 'trend-bar up';
+                        bar.style.height = '40%';
+                    }
                 } else {
-                    colorClass = 'trend-path yellow';
-                    console.log(`${metricId} STABLE: ${previousValue} → ${currentValue} (${trend}) - setting YELLOW`);
+                    bar.className = 'trend-bar stable';
+                    bar.style.height = '30%';
                 }
-                
-                // Force the class change
-                pathElement.setAttribute('class', colorClass);
-                
-                // Double-check it was applied
-                console.log(`Final class for ${metricId}:`, pathElement.getAttribute('class'));
-            }
+            });
         }
 
         function updateAllMetrics() {
-            // Update displays first
             updateMetricDisplay('financial', gameState.metrics.financial);
             updateMetricDisplay('reputation', gameState.metrics.reputation);
             updateMetricDisplay('research', gameState.metrics.research);
@@ -1634,425 +1038,60 @@
             updateMetricDisplay('student', gameState.metrics.student);
             updateMetricDisplay('local', gameState.metrics.local);
         }
-        
+
         function recordMetricsInHistory() {
-            // Store current values in history after effects are applied
             Object.keys(gameState.metrics).forEach(metric => {
                 gameState.metricsHistory[metric].push(gameState.metrics[metric]);
-                // Keep only last 10 values to prevent memory issues
-                if (gameState.metricsHistory[metric].length > 10) {
+                if (gameState.metricsHistory[metric].length > 8) {
                     gameState.metricsHistory[metric].shift();
                 }
             });
-            
-            // Update trend lines after recording history
-            Object.keys(gameState.metrics).forEach(metric => {
-                updateTrendLine(metric);
-            });
-        }
-
-        function checkTriggers(oldMetrics) {
-            const triggers = [];
-            const metricNames = {
-                financial: "Financial",
-                reputation: "Reputation", 
-                research: "Research Quality",
-                staff: "Staff Morale",
-                student: "Student Satisfaction",
-                local: "Local Impact"
-            };
-
-            Object.keys(gameState.metrics).forEach(metric => {
-                const currentValue = gameState.metrics[metric];
-                const oldValue = oldMetrics[metric];
-                const change = currentValue - oldValue;
-                const currentZone = getMetricZone(currentValue);
-                const oldZone = getMetricZone(oldValue);
-                
-                // Only show triggers for yellow and red zones
-                if (currentZone === "yellow" || currentZone === "red") {
-                    let statusText = "";
-                    let changeText = "";
-                    
-                    // Determine if zone changed
-                    if (oldZone !== currentZone) {
-                        if (currentZone === "yellow") {
-                            statusText = "THREAT: Entered yellow zone";
-                        } else if (currentZone === "red") {
-                            statusText = "CRISIS: Entered red zone";
-                        }
-                    } else {
-                        // Same zone, show current status
-                        if (currentZone === "yellow") {
-                            statusText = "THREAT: In yellow zone";
-                        } else if (currentZone === "red") {
-                            statusText = "CRISIS: In red zone";
-                        }
-                    }
-                    
-                    // Add change indicator
-                    if (change > 0) {
-                        changeText = ` (${currentValue}, +${change})`;
-                    } else if (change < 0) {
-                        changeText = ` (${currentValue}, ${change})`;
-                    } else {
-                        changeText = ` (${currentValue}, no change)`;
-                    }
-                    
-                    const icon = currentZone === "red" ? "🚨" : "⚠️";
-                    triggers.push(`${icon} ${metricNames[metric]} ${statusText}${changeText}`);
-                }
-            });
-
-            return triggers;
-        }
-
-        function applyCascadeEffects() {
-            let cascadeMessage = "";
-            
-            // Apply penalties for yellow and red zones
-            Object.keys(gameState.metrics).forEach(metric => {
-                const value = gameState.metrics[metric];
-                
-                if (value < 40) { // Red zone cascades
-                    switch(metric) {
-                        case 'staff':
-                            // Unhappy staff affects everything
-                            gameState.metrics.student = Math.max(0, gameState.metrics.student - 4);
-                            gameState.metrics.research = Math.max(0, gameState.metrics.research - 4);
-                            gameState.metrics.reputation = Math.max(0, gameState.metrics.reputation - 3);
-                            cascadeMessage += "💥 Staff crisis destroying teaching quality and research output! ";
-                            break;
-                        case 'student':
-                            // Unhappy students damage reputation and finances
-                            gameState.metrics.reputation = Math.max(0, gameState.metrics.reputation - 4);
-                            gameState.metrics.financial = Math.max(0, gameState.metrics.financial - 3);
-                            cascadeMessage += "💥 Student dissatisfaction damaging reputation and enrollment! ";
-                            break;
-                        case 'reputation':
-                            // Poor reputation affects finances and staff retention
-                            gameState.metrics.financial = Math.max(0, gameState.metrics.financial - 4);
-                            gameState.metrics.staff = Math.max(0, gameState.metrics.staff - 3);
-                            cascadeMessage += "💥 Reputation collapse affecting funding and staff retention! ";
-                            break;
-                        case 'financial':
-                            // Financial crisis affects everything severely
-                            Object.keys(gameState.metrics).forEach(otherMetric => {
-                                if (otherMetric !== 'financial') {
-                                    gameState.metrics[otherMetric] = Math.max(0, gameState.metrics[otherMetric] - 6);
-                                }
-                            });
-                            cascadeMessage += "💥 Financial collapse destroying all operations! ";
-                            break;
-                        case 'research':
-                            // Poor research affects reputation and staff morale
-                            gameState.metrics.reputation = Math.max(0, gameState.metrics.reputation - 3);
-                            gameState.metrics.staff = Math.max(0, gameState.metrics.staff - 2);
-                            cascadeMessage += "💥 Research failure damaging institutional credibility! ";
-                            break;
-                        case 'local':
-                            // Poor community relations affect reputation and finances
-                            gameState.metrics.reputation = Math.max(0, gameState.metrics.reputation - 2);
-                            gameState.metrics.financial = Math.max(0, gameState.metrics.financial - 2);
-                            cascadeMessage += "💥 Community backlash affecting public support! ";
-                            break;
-                    }
-                } else if (value >= 40 && value < 70) { // Yellow zone cascades (milder)
-                    switch(metric) {
-                        case 'staff':
-                            gameState.metrics.student = Math.max(0, gameState.metrics.student - 2);
-                            gameState.metrics.research = Math.max(0, gameState.metrics.research - 1);
-                            cascadeMessage += "⚠️ Staff concerns affecting teaching quality. ";
-                            break;
-                        case 'student':
-                            gameState.metrics.reputation = Math.max(0, gameState.metrics.reputation - 2);
-                            gameState.metrics.financial = Math.max(0, gameState.metrics.financial - 1);
-                            cascadeMessage += "⚠️ Student dissatisfaction affecting reputation. ";
-                            break;
-                        case 'reputation':
-                            gameState.metrics.financial = Math.max(0, gameState.metrics.financial - 2);
-                            cascadeMessage += "⚠️ Reputation concerns affecting funding. ";
-                            break;
-                    }
-                }
-            });
-
-            return cascadeMessage;
-        }
-
-        function checkForGameOver() {
-            // Multiple failure conditions
-            
-            // Condition 1: Multiple critical failures
-            const redZoneMetrics = Object.keys(gameState.metrics).filter(metric => gameState.metrics[metric] < 40);
-            if (redZoneMetrics.length >= 4) {
-                return {
-                    type: "institutional_collapse",
-                    message: "The university has collapsed under multiple critical failures. Too many systems have failed simultaneously.",
-                    details: `Critical failures in: ${redZoneMetrics.join(', ')}`
-                };
-            }
-            
-            // Condition 2: Financial insolvency
-            if (gameState.metrics.financial <= 10) {
-                return {
-                    type: "bankruptcy",
-                    message: "The university has declared bankruptcy. Operations cannot continue without funding.",
-                    details: `Financial strength: ${gameState.metrics.financial}`
-                };
-            }
-            
-            // Condition 3: Complete staff exodus
-            if (gameState.metrics.staff <= 5) {
-                return {
-                    type: "staff_exodus",
-                    message: "Mass staff exodus has left the university unable to operate. There are no longer enough employees to function.",
-                    details: `Staff morale: ${gameState.metrics.staff}`
-                };
-            }
-            
-            // Condition 4: Student boycott
-            if (gameState.metrics.student <= 5) {
-                return {
-                    type: "student_boycott",
-                    message: "Student satisfaction is so low that enrollment has collapsed. The university cannot survive without students.",
-                    details: `Student satisfaction: ${gameState.metrics.student}`
-                };
-            }
-            
-            // Condition 5: Sustained crisis (any metric in red for too long)
-            // Check if we've been stuck in crisis loops for too many months
-            const currentCrisis = findActiveCrisis();
-            if (currentCrisis && crisisHistory[currentCrisis] !== undefined) {
-                // If we've had the same crisis for multiple months without significant improvement
-                const sustainedCrisisMonths = gameState.sustainedCrisis || {};
-                sustainedCrisisMonths[currentCrisis] = (sustainedCrisisMonths[currentCrisis] || 0) + 1;
-                gameState.sustainedCrisisMonths = sustainedCrisisMonths;
-                
-                if (sustainedCrisisMonths[currentCrisis] >= 6) {
-                    return {
-                        type: "sustained_crisis",
-                        message: `The ${currentCrisis} crisis has persisted for too long. The institution can no longer recover from prolonged failure.`,
-                        details: `${currentCrisis} has been in crisis for ${sustainedCrisisMonths[currentCrisis]} months`
-                    };
-                }
-            }
-            
-            return null; // No game over condition met
-        }
-
-        function showGameOver(gameOverInfo) {
-            const gameOverHTML = `
-                <div class="scenario" style="border: 3px solid #ff0000; background-color: #330000;">
-                    <div class="scenario-title" style="color: #ff0000; font-size: 24px; text-align: center;">
-                        💀 GAME OVER 💀
-                    </div>
-                    <div class="scenario-description" style="color: #ffcccc; text-align: center; padding: 30px;">
-                        <h3 style="color: #ff6666;">${gameOverInfo.type.replace(/_/g, ' ').toUpperCase()}</h3>
-                        <p style="font-size: 18px; margin: 20px 0;">${gameOverInfo.message}</p>
-                        <p style="color: #ff9999;">${gameOverInfo.details}</p>
-                        
-                        <div style="margin: 30px 0; padding: 20px; background-color: #1a0000; border-radius: 10px;">
-                            <h4 style="color: #ffff00;">Your Final Metrics:</h4>
-                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 15px 0;">
-                                ${Object.keys(gameState.metrics).map(metric => `
-                                    <div style="color: ${getMetricZone(gameState.metrics[metric]) === 'red' ? '#ff6666' : getMetricZone(gameState.metrics[metric]) === 'yellow' ? '#ffff00' : '#00ff00'};">
-                                        ${metric.charAt(0).toUpperCase() + metric.slice(1)}: ${gameState.metrics[metric]}
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                        
-                        <div style="margin: 30px 0; padding: 20px; background-color: #0a0a1a; border-radius: 10px;">
-                            <h4 style="color: #00ffff;">Your Management Philosophy:</h4>
-                            <div style="color: #cccccc;">
-                                ${Object.keys(gameState.culturalChoices).map(culture => 
-                                    `${culture.charAt(0).toUpperCase() + culture.slice(1)}: ${gameState.culturalChoices[culture]} choices`
-                                ).join('<br>')}
-                            </div>
-                        </div>
-                        
-                        <p style="color: #ffff00; font-style: italic;">
-                            Every choice has consequences. In economics, as in institutional management, 
-                            sustainable success requires balancing competing priorities and managing trade-offs wisely.
-                        </p>
-                        
-                        <button class="continue-button" onclick="location.reload()" 
-                                style="background-color: #660000; border-color: #ff0000; margin-top: 20px;">
-                            Try Again
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('scenario-container').innerHTML = gameOverHTML;
-            document.getElementById('results-container').style.display = 'none';
-            document.getElementById('scenario-container').style.display = 'block';
-        }
-
-        function applyPositiveCascades() {
-            let cascadeMessage = "";
-            
-            // High staff morale benefits
-            if (gameState.metrics.staff >= 80) {
-                gameState.metrics.student = Math.min(100, gameState.metrics.student + 2);
-                gameState.metrics.research = Math.min(100, gameState.metrics.research + 2);
-                cascadeMessage += "✨ High staff morale boosting teaching and research! ";
-            }
-            
-            // High student satisfaction benefits
-            if (gameState.metrics.student >= 80) {
-                gameState.metrics.reputation = Math.min(100, gameState.metrics.reputation + 2);
-                gameState.metrics.financial = Math.min(100, gameState.metrics.financial + 3);
-                cascadeMessage += "✨ Happy students boosting reputation and enrollment! ";
-            }
-            
-            // Community synergy bonus
-            if (gameState.metrics.staff >= 75 && gameState.metrics.student >= 75 && gameState.metrics.local >= 60) {
-                gameState.metrics.reputation = Math.min(100, gameState.metrics.reputation + 3);
-                gameState.metrics.financial = Math.min(100, gameState.metrics.financial + 2);
-                cascadeMessage += "✨ COMMUNITY SYNERGY: Strong culture attracting external support! ";
-            }
-
-            return cascadeMessage;
-        }
-
-        function startGame() {
-            document.getElementById('intro-screen').style.display = 'none';
-            document.getElementById('game-screen').style.display = 'block';
-            
-            // Move all the game content into the game screen
-            const gameContent = `
-                <div class="title">🏛️ CAMPUS SIMULATOR 🏛️</div>
-                
-                <div class="game-info">
-                    <div>Month: <span id="current-month">September</span> | Year: <span id="current-year">1</span></div>
-                    <div>Scenario: <span id="scenario-count">1</span> of 30</div>
-                </div>
-                
-                <div class="metrics-display">
-                    <div class="metric">
-                        <span class="metric-name">Financial:</span>
-                        <div class="metric-info">
-                            <svg class="trend-line" id="financial-trend" viewBox="0 0 60 20" preserveAspectRatio="none">
-                                <polyline class="trend-path yellow" id="financial-path" points=""></polyline>
-                            </svg>
-                            <span class="metric-value" id="financial-value">60</span>
-                        </div>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-name">Reputation:</span>
-                        <div class="metric-info">
-                            <svg class="trend-line" id="reputation-trend" viewBox="0 0 60 20" preserveAspectRatio="none">
-                                <polyline class="trend-path yellow" id="reputation-path" points=""></polyline>
-                            </svg>
-                            <span class="metric-value" id="reputation-value">65</span>
-                        </div>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-name">Research:</span>
-                        <div class="metric-info">
-                            <svg class="trend-line" id="research-trend" viewBox="0 0 60 20" preserveAspectRatio="none">
-                                <polyline class="trend-path yellow" id="research-path" points=""></polyline>
-                            </svg>
-                            <span class="metric-value" id="research-value">70</span>
-                        </div>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-name">Staff Morale:</span>
-                        <div class="metric-info">
-                            <svg class="trend-line" id="staff-trend" viewBox="0 0 60 20" preserveAspectRatio="none">
-                                <polyline class="trend-path yellow" id="staff-path" points=""></polyline>
-                            </svg>
-                            <span class="metric-value" id="staff-value">55</span>
-                        </div>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-name">Students:</span>
-                        <div class="metric-info">
-                            <svg class="trend-line" id="student-trend" viewBox="0 0 60 20" preserveAspectRatio="none">
-                                <polyline class="trend-path yellow" id="student-path" points=""></polyline>
-                            </svg>
-                            <span class="metric-value" id="student-value">60</span>
-                        </div>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-name">Local Impact:</span>
-                        <div class="metric-info">
-                            <svg class="trend-line" id="local-trend" viewBox="0 0 60 20" preserveAspectRatio="none">
-                                <polyline class="trend-path yellow" id="local-path" points=""></polyline>
-                            </svg>
-                            <span class="metric-value" id="local-value">50</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="scenario" id="scenario-container">
-                    <!-- Scenario content will be inserted here -->
-                </div>
-                
-                <div id="results-container" style="display: none;">
-                    <!-- Results will be shown here -->
-                </div>
-            `;
-            
-            document.getElementById('game-screen').innerHTML = gameContent;
-            
-            // Initialize game
-            updateAllMetrics();
-            
-            // Initialize trend lines with starting values
-            Object.keys(gameState.metrics).forEach(metric => {
-                updateTrendLine(metric);
-            });
-            
-            displayScenario();
         }
 
         function displayScenario() {
             if (gameState.currentScenario >= scenarios.length) {
-                // Game complete - show final results
-                const dominantCulture = Object.keys(gameState.culturalChoices).reduce((a, b) => 
-                    gameState.culturalChoices[a] > gameState.culturalChoices[b] ? a : b
-                );
-                
-                document.getElementById('scenario-container').innerHTML = `
-                    <div class="scenario-title">🎓 Campus Transformation Complete! 🎓</div>
-                    <div class="scenario-description">
-                        Congratulations! You've guided your university through four years of crisis and transformation.
-                        <br><br>
-                        <strong style="color: #00ffff;">Your Management Philosophy:</strong><br>
-                        Primary approach: <strong style="color: #ffff00;">${dominantCulture.charAt(0).toUpperCase() + dominantCulture.slice(1)}</strong>
-                        <br><br>
-                        <strong style="color: #00ffff;">Cultural Choice Distribution:</strong><br>
-                        Community: ${gameState.culturalChoices.community} choices<br>
-                        Individualistic: ${gameState.culturalChoices.individualistic} choices<br>
-                        Corporate: ${gameState.culturalChoices.corporate} choices<br>
-                        Nurturing: ${gameState.culturalChoices.nurturing} choices
-                        <br><br>
-                        <strong style="color: #00ffff;">Final Institution Profile:</strong><br>
-                        Look at your metrics and trend lines above to see what kind of university you've created!
-                        <br><br>
-                        <em style="color: #888888;">In the full game, this would include detailed victory assessment based on your chosen cultural path and whether you achieved sustainable success.</em>
-                    </div>
-                `;
+                showGameComplete();
                 return;
             }
 
             const scenario = scenarios[gameState.currentScenario];
-            const scenarioHTML = `
-                <div class="scenario-title">${scenario.title}</div>
-                <div class="scenario-description">${scenario.description}</div>
-                <div class="choices">
-                    ${scenario.choices.map((choice, index) => `
-                        <button class="choice-button" onclick="makeChoice(${index})">
-                            <div class="choice-label">${choice.label}</div>
-                            <div>${choice.description}</div>
-                        </button>
-                    `).join('')}
-                </div>
-            `;
-            document.getElementById('scenario-container').innerHTML = scenarioHTML;
+            const scenarioCard = document.getElementById('scenario-card');
+            const isCrisis = checkForCrisis();
+            
+            // Apply crisis styling if needed
+            if (isCrisis) {
+                scenarioCard.classList.add('crisis-scenario');
+                document.getElementById('scenario-title').classList.add('crisis-title');
+            } else {
+                scenarioCard.classList.remove('crisis-scenario');
+                document.getElementById('scenario-title').classList.remove('crisis-title');
+            }
+            
+            document.getElementById('scenario-title').textContent = scenario.title;
+            document.getElementById('scenario-description').textContent = scenario.description;
+            
+            const choicesContainer = document.getElementById('choices-container');
+            choicesContainer.innerHTML = '';
+            
+            scenario.choices.forEach((choice, index) => {
+                const button = document.createElement('button');
+                button.className = `choice-button pixel-border ${choice.culture}`;
+                button.onclick = () => makeChoice(index);
+                
+                button.innerHTML = `
+                    <div class="choice-label">${choice.label}</div>
+                    <div class="choice-description">${choice.description}</div>
+                `;
+                
+                choicesContainer.appendChild(button);
+            });
+            
+            // Hide results
+            document.getElementById('results-container').classList.add('hidden');
+        }
+
+        function checkForCrisis() {
+            return Object.values(gameState.metrics).some(value => value < 40);
         }
 
         function makeChoice(choiceIndex) {
@@ -2069,384 +1108,120 @@
             });
             
             // Apply cascade effects
-            const cascadeMessage = applyCascadeEffects();
-            const positiveMessage = applyPositiveCascades();
+            const cascadeMessages = applyCascadeEffects();
             
-            // Update display
-            updateAllMetrics();
-            
-            // Record metrics in history for trend lines
-            recordMetricsInHistory();
-            
-            // Show results
-            showResults(choice, oldMetrics, cascadeMessage + positiveMessage);
-        }
-
-        function showResults(choice, oldMetrics, cascadeMessage) {
-            const triggers = checkTriggers(oldMetrics);
-            
-            let resultsHTML = `
-                <div class="results">
-                    <div class="results-title">Results: ${choice.label}</div>
-                    <div style="margin-bottom: 15px; font-style: italic;">"${choice.description}"</div>
-            `;
-            
-            // Show metric changes
-            Object.keys(choice.effects).forEach(metric => {
-                const change = choice.effects[metric];
-                const oldValue = oldMetrics[metric];
-                const newValue = gameState.metrics[metric];
-                const changeClass = change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral';
-                const changeStr = change > 0 ? `+${change}` : `${change}`;
-                
-                resultsHTML += `
-                    <div class="metric-change">
-                        ${metric.charAt(0).toUpperCase() + metric.slice(1)}: ${oldValue} → ${newValue} <span class="${changeClass}">(${changeStr})</span>
-                    </div>
-                `;
-            });
-            
-            if (cascadeMessage) {
-                resultsHTML += `<div style="margin-top: 15px; color: #ffff00;">${cascadeMessage}</div>`;
-            }
-            
-            if (triggers.length > 0) {
-                resultsHTML += `
-                    <div class="triggers">
-                        <div class="triggers-title">⚠️ TRIGGERED EVENTS:</div>
-                        ${triggers.map(trigger => `<div>• ${trigger}</div>`).join('')}
-                    </div>
-                `;
-            }
-            
-            resultsHTML += `
-                    <button class="continue-button" onclick="nextScenario()">Continue to Next Month</button>
-                </div>
-            `;
-            
-            document.getElementById('results-container').innerHTML = resultsHTML;
-            document.getElementById('results-container').style.display = 'block';
-            document.getElementById('scenario-container').style.display = 'none';
-        }
-
-        function makeChoice(choiceIndex) {
-            const scenario = scenarios[gameState.currentScenario];
-            const choice = scenario.choices[choiceIndex];
-            
-            // Track cultural choice
-            gameState.culturalChoices[choice.culture]++;
-            
-            // Apply effects
-            const oldMetrics = {...gameState.metrics};
-            Object.keys(choice.effects).forEach(metric => {
-                gameState.metrics[metric] = Math.max(0, Math.min(100, gameState.metrics[metric] + choice.effects[metric]));
-            });
-            
-            // Apply cascade effects
-            const cascadeMessage = applyCascadeEffects();
-            const positiveMessage = applyPositiveCascades();
-            
-            // Update display and record in history
+            // Update display and record history
             updateAllMetrics();
             recordMetricsInHistory();
             
             // Show results
-            showResults(choice, oldMetrics, cascadeMessage + positiveMessage);
+            showResults(choice, oldMetrics, cascadeMessages);
         }
 
-        function showResults(choice, oldMetrics, cascadeMessage) {
-            const triggers = checkTriggers(oldMetrics);
+        function applyCascadeEffects() {
+            let messages = [];
             
-            let resultsHTML = `
-                <div class="results">
-                    <div class="results-title">Results: ${choice.label}</div>
-                    <div style="margin-bottom: 15px; font-style: italic;">"${choice.description}"</div>
-            `;
-            
-            // Show metric changes
-            Object.keys(choice.effects).forEach(metric => {
-                const change = choice.effects[metric];
-                const oldValue = oldMetrics[metric];
-                const newValue = gameState.metrics[metric];
-                const changeClass = change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral';
-                const changeStr = change > 0 ? `+${change}` : `${change}`;
+            // Crisis cascades
+            Object.keys(gameState.metrics).forEach(metric => {
+                const value = gameState.metrics[metric];
                 
-                resultsHTML += `
-                    <div class="metric-change">
-                        ${metric.charAt(0).toUpperCase() + metric.slice(1)}: ${oldValue} → ${newValue} <span class="${changeClass}">(${changeStr})</span>
-                    </div>
-                `;
-            });
-            
-            if (cascadeMessage) {
-                resultsHTML += `<div style="margin-top: 15px; color: #ffff00;">${cascadeMessage}</div>`;
-            }
-            
-            if (triggers.length > 0) {
-                resultsHTML += `
-                    <div class="triggers">
-                        <div class="triggers-title">⚠️ TRIGGERED EVENTS:</div>
-                        ${triggers.map(trigger => `<div>• ${trigger}</div>`).join('')}
-                    </div>
-                `;
-            }
-            
-            resultsHTML += `
-                    <button class="continue-button" onclick="nextScenario()">Continue to Next Month</button>
-                </div>
-            `;
-            
-            document.getElementById('results-container').innerHTML = resultsHTML;
-            document.getElementById('results-container').style.display = 'block';
-            document.getElementById('scenario-container').style.display = 'none';
-        }
-
-        // Track which crises are active and their previous values
-        let activeCrisis = null;
-        let crisisHistory = {};
-
-        function nextScenario() {
-            console.log("=== NEXT SCENARIO DEBUG ===");
-            console.log("Current scenario:", gameState.currentScenario);
-            console.log("Current metrics:", gameState.metrics);
-            console.log("Crisis history:", crisisHistory);
-            
-            // Check for game over conditions first
-            const gameOverInfo = checkForGameOver();
-            if (gameOverInfo) {
-                console.log("GAME OVER:", gameOverInfo);
-                showGameOver(gameOverInfo);
-                return;
-            }
-            
-            // First, check if we need to handle a crisis
-            const crisisType = findActiveCrisis();
-            console.log("Crisis check result:", crisisType);
-            
-            if (crisisType) {
-                // Check if this is a new crisis or if we need to repeat due to lack of improvement
-                const shouldShowCrisis = shouldRepeatCrisis(crisisType);
-                console.log("Should show crisis for", crisisType, "?", shouldShowCrisis);
-                
-                if (shouldShowCrisis) {
-                    console.log("SHOWING CRISIS:", crisisType);
-                    activeCrisis = crisisType;
-                    showCrisisScenario(crisisType);
-                    return; // Stop here, don't advance to next scenario
-                } else {
-                    console.log("Crisis improving, not showing repeat crisis scenario");
-                    // Crisis is improving, clear it and continue
-                    activeCrisis = null;
-                    delete crisisHistory[crisisType];
-                    // Clear sustained crisis counter
-                    if (gameState.sustainedCrisisMonths) {
-                        delete gameState.sustainedCrisisMonths[crisisType];
+                if (value < 40) {
+                    switch(metric) {
+                        case 'staff':
+                            gameState.metrics.student = Math.max(0, gameState.metrics.student - 4);
+                            gameState.metrics.research = Math.max(0, gameState.metrics.research - 4);
+                            messages.push("💥 Staff crisis affecting teaching and research!");
+                            break;
+                        case 'student':
+                            gameState.metrics.reputation = Math.max(0, gameState.metrics.reputation - 4);
+                            gameState.metrics.financial = Math.max(0, gameState.metrics.financial - 3);
+                            messages.push("💥 Student dissatisfaction damaging reputation!");
+                            break;
+                        case 'financial':
+                            Object.keys(gameState.metrics).forEach(otherMetric => {
+                                if (otherMetric !== 'financial') {
+                                    gameState.metrics[otherMetric] = Math.max(0, gameState.metrics[otherMetric] - 3);
+                                }
+                            });
+                            messages.push("💥 Financial crisis destroying operations!");
+                            break;
                     }
                 }
-            }
-            
-            // No crisis or crisis resolved, proceed to next regular scenario
-            console.log("Proceeding to next regular scenario");
-            advanceToNextScenario();
-        }
-
-        function findActiveCrisis() {
-            // Check each metric for red zone crisis
-            const metrics = ['financial', 'staff', 'student', 'reputation', 'research', 'local'];
-            
-            for (let metric of metrics) {
-                if (gameState.metrics[metric] < 40) {
-                    console.log(`CRISIS FOUND: ${metric} = ${gameState.metrics[metric]}`);
-                    return metric;
-                }
-            }
-            
-            return null;
-        }
-
-        function shouldRepeatCrisis(crisisType) {
-            const currentValue = gameState.metrics[crisisType];
-            const previousValue = crisisHistory[crisisType];
-            
-            console.log(`Crisis ${crisisType}: previous=${previousValue}, current=${currentValue}`);
-            
-            // If no previous record, this is a new crisis
-            if (previousValue === undefined) {
-                console.log("New crisis - showing scenario");
-                return true;
-            }
-            
-            // If metric got worse or stayed the same, repeat crisis
-            if (currentValue <= previousValue) {
-                console.log("Crisis worsened or unchanged - showing scenario");
-                return true;
-            }
-            
-            // If metric improved, don't repeat crisis
-            console.log("Crisis improved - not showing scenario");
-            return false;
-        }
-
-        function showCrisisScenario(crisisType) {
-            console.log("SHOWING CRISIS SCENARIO FOR:", crisisType);
-            
-            const crisis = crisisScenarios[crisisType];
-            if (!crisis) {
-                console.error("No crisis scenario defined for:", crisisType);
-                activeCrisis = null; // Reset crisis state
-                advanceToNextScenario(); // Continue with regular flow
-                return;
-            }
-            
-            // Force hide results container and show scenario container
-            document.getElementById('results-container').style.display = 'none';
-            document.getElementById('scenario-container').style.display = 'block';
-            
-            const scenarioHTML = `
-                <div class="scenario-title" style="color: #ff6666; background-color: #330000; padding: 10px; border-radius: 5px;">
-                    🚨 CRISIS: ${crisis.title} 🚨
-                </div>
-                <div class="scenario-description" style="border: 3px solid #ff6666; padding: 20px; background-color: #1a0000; margin: 15px 0; border-radius: 5px;">
-                    <strong style="color: #ff9999;">EMERGENCY SITUATION:</strong><br><br>
-                    ${crisis.description}
-                    <br><br>
-                    <em style="color: #ffcccc;">You must resolve this crisis before continuing normal operations.</em>
-                </div>
-                <div class="choices">
-                    ${crisis.choices.map((choice, index) => `
-                        <button class="choice-button" onclick="handleCrisisChoice('${crisisType}', ${index})" 
-                                style="border: 2px solid #ff6666; background-color: #330000;">
-                            <div class="choice-label" style="color: #ff9999;">${choice.label}</div>
-                            <div style="color: #ffcccc;">${choice.description}</div>
-                        </button>
-                    `).join('')}
-                </div>
-            `;
-            
-            document.getElementById('scenario-container').innerHTML = scenarioHTML;
-            console.log("Crisis scenario HTML set");
-        }
-
-        function handleCrisisChoice(crisisType, choiceIndex) {
-            console.log("HANDLING CRISIS CHOICE:", crisisType, choiceIndex);
-            
-            // Record the current value before applying effects
-            const valueBeforeChoice = gameState.metrics[crisisType];
-            console.log(`Recording ${crisisType} value before choice:`, valueBeforeChoice);
-            
-            const crisis = crisisScenarios[crisisType];
-            const choice = crisis.choices[choiceIndex];
-            
-            // Track cultural choice
-            gameState.culturalChoices[choice.culture]++;
-            
-            // Apply effects
-            const oldMetrics = {...gameState.metrics};
-            Object.keys(choice.effects).forEach(metric => {
-                gameState.metrics[metric] = Math.max(0, Math.min(100, gameState.metrics[metric] + choice.effects[metric]));
             });
             
-            // Apply cascade effects
-            const cascadeMessage = applyCascadeEffects();
-            const positiveMessage = applyPositiveCascades();
-            
-            // Update display and record in history
-            updateAllMetrics();
-            recordMetricsInHistory();
-            
-            // Record the crisis value for comparison next time
-            crisisHistory[crisisType] = gameState.metrics[crisisType];
-            console.log(`Updated crisis history for ${crisisType}:`, crisisHistory[crisisType]);
-            
-            // Check if crisis is resolved (above 40) or improved
-            const crisisResolved = gameState.metrics[crisisType] >= 40;
-            const crisisImproved = gameState.metrics[crisisType] > valueBeforeChoice;
-            
-            console.log("Crisis resolved?", crisisResolved, `(${crisisType} = ${gameState.metrics[crisisType]})`);
-            console.log("Crisis improved?", crisisImproved, `(${valueBeforeChoice} → ${gameState.metrics[crisisType]})`);
-            
-            if (crisisResolved) {
-                activeCrisis = null; // Clear active crisis
-                delete crisisHistory[crisisType]; // Clear history
-                console.log("Crisis fully resolved - clearing history");
+            // Positive cascades
+            if (gameState.metrics.staff >= 80) {
+                gameState.metrics.student = Math.min(100, gameState.metrics.student + 2);
+                gameState.metrics.research = Math.min(100, gameState.metrics.research + 2);
+                messages.push("✨ High staff morale boosting performance!");
             }
             
-            // Show crisis results
-            showCrisisResults(choice, oldMetrics, cascadeMessage + positiveMessage, crisisType, crisisResolved, crisisImproved);
+            if (gameState.metrics.student >= 80) {
+                gameState.metrics.reputation = Math.min(100, gameState.metrics.reputation + 2);
+                messages.push("✨ Happy students boosting reputation!");
+            }
+            
+            return messages;
         }
 
-        function showCrisisResults(choice, oldMetrics, cascadeMessage, crisisType, crisisResolved, crisisImproved) {
-            const triggers = checkTriggers(oldMetrics);
+        function showResults(choice, oldMetrics, cascadeMessages) {
+            const resultsContainer = document.getElementById('results-container');
+            const resultsTitle = document.getElementById('results-title');
+            const resultsContent = document.getElementById('results-content');
             
-            let resultsHTML = `
-                <div class="results" style="border: 3px solid #ff6666; background-color: #1a0000;">
-                    <div class="results-title" style="color: #ff6666;">🚨 CRISIS RESPONSE: ${choice.label}</div>
-                    <div style="margin-bottom: 15px; font-style: italic; color: #ffcccc;">"${choice.description}"</div>
-            `;
+            resultsTitle.textContent = `Results: ${choice.label}`;
             
-            // Show metric changes
+            let html = `<div class="intro-text" style="margin-bottom: 12px; font-style: italic;">"${choice.description}"</div>`;
+            
+            // Metric changes
+            html += '<div class="metric-changes">';
             Object.keys(choice.effects).forEach(metric => {
                 const change = choice.effects[metric];
                 const oldValue = oldMetrics[metric];
                 const newValue = gameState.metrics[metric];
-                const changeClass = change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral';
+                const changeClass = change > 0 ? 'change-positive' : change < 0 ? 'change-negative' : 'change-neutral';
                 const changeStr = change > 0 ? `+${change}` : `${change}`;
                 
-                resultsHTML += `
+                html += `
                     <div class="metric-change">
-                        ${metric.charAt(0).toUpperCase() + metric.slice(1)}: ${oldValue} → ${newValue} <span class="${changeClass}">(${changeStr})</span>
+                        <span>${metric.charAt(0).toUpperCase() + metric.slice(1)}</span>
+                        <span class="${changeClass}">${oldValue} → ${newValue} (${changeStr})</span>
                     </div>
                 `;
             });
+            html += '</div>';
             
-            if (cascadeMessage) {
-                resultsHTML += `<div style="margin-top: 15px; color: #ffff00;">${cascadeMessage}</div>`;
+            // Cascade messages
+            if (cascadeMessages.length > 0) {
+                html += '<div class="triggers-container pixel-border">';
+                html += '<div class="triggers-title">⚠️ CASCADE EFFECTS:</div>';
+                cascadeMessages.forEach(msg => {
+                    html += `<div class="trigger-item">${msg}</div>`;
+                });
+                html += '</div>';
             }
             
-            if (triggers.length > 0) {
-                resultsHTML += `
-                    <div class="triggers">
-                        <div class="triggers-title">⚠️ ONGOING ALERTS:</div>
-                        ${triggers.map(trigger => `<div>• ${trigger}</div>`).join('')}
-                    </div>
-                `;
+            // Crisis warnings
+            const criticalMetrics = Object.keys(gameState.metrics).filter(m => gameState.metrics[m] < 40);
+            if (criticalMetrics.length > 0) {
+                html += '<div class="triggers-container pixel-border" style="background: var(--health-bad); color: white;">';
+                html += '<div class="triggers-title">🚨 CRITICAL ALERTS:</div>';
+                criticalMetrics.forEach(metric => {
+                    html += `<div class="trigger-item">${metric.toUpperCase()} in crisis zone (${gameState.metrics[metric]})</div>`;
+                });
+                html += '</div>';
             }
             
-            // Crisis status display with improvement logic
-            let statusColor, statusIcon, statusMessage;
+            resultsContent.innerHTML = html;
+            resultsContainer.classList.remove('hidden');
             
-            if (crisisResolved) {
-                statusColor = '#00ff00';
-                statusIcon = '✅';
-                statusMessage = `Crisis fully resolved! ${crisisType.charAt(0).toUpperCase() + crisisType.slice(1)} is back in safe zone (${gameState.metrics[crisisType]}). Returning to normal operations.`;
-            } else if (crisisImproved) {
-                statusColor = '#ffff00';
-                statusIcon = '📈';
-                statusMessage = `Crisis improving! ${crisisType.charAt(0).toUpperCase() + crisisType.slice(1)} is still critical (${gameState.metrics[crisisType]}) but getting better. Continue normal operations.`;
-            } else {
-                statusColor = '#ff6666';
-                statusIcon = '⚠️';
-                statusMessage = `Crisis persists! ${crisisType.charAt(0).toUpperCase() + crisisType.slice(1)} remains critical (${gameState.metrics[crisisType]}) with no improvement. Crisis will continue next month.`;
-            }
-            
-            resultsHTML += `
-                <div style="margin: 20px 0; padding: 15px; border-radius: 5px; background-color: ${crisisResolved ? '#001a00' : crisisImproved ? '#1a1a00' : '#1a0000'}; border: 2px solid ${statusColor};">
-                    <strong style="color: ${statusColor};">CRISIS STATUS:</strong><br>
-                    <span style="color: ${statusColor};">${statusIcon} ${statusMessage}</span>
-                </div>
-                <button class="continue-button" onclick="nextScenario()" style="background-color: ${crisisResolved ? '#003300' : crisisImproved ? '#333300' : '#330000'}; border-color: ${statusColor};">
-                    Continue Management
-                </button>
-            `;
-            
-            document.getElementById('results-container').innerHTML = resultsHTML;
-            document.getElementById('results-container').style.display = 'block';
-            document.getElementById('scenario-container').style.display = 'none';
+            // Scroll to results on mobile
+            setTimeout(() => {
+                resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
         }
 
-        function advanceToNextScenario() {
-            console.log("ADVANCING TO NEXT SCENARIO");
-            
+        function nextScenario() {
             gameState.currentScenario++;
             gameState.currentMonth++;
             
@@ -2455,25 +1230,94 @@
                 gameState.currentYear++;
             }
             
-            console.log("New scenario:", gameState.currentScenario, "Month:", months[gameState.currentMonth]);
-            
-            // Update display counters
-            const monthElement = document.getElementById('current-month');
-            const yearElement = document.getElementById('current-year');
-            const countElement = document.getElementById('scenario-count');
-            
-            if (monthElement) monthElement.textContent = months[gameState.currentMonth];
-            if (yearElement) yearElement.textContent = gameState.currentYear;
-            if (countElement) countElement.textContent = gameState.currentScenario + 1;
-            
-            document.getElementById('results-container').style.display = 'none';
-            document.getElementById('scenario-container').style.display = 'block';
+            // Update display
+            document.getElementById('current-month').textContent = months[gameState.currentMonth];
+            document.getElementById('current-year').textContent = gameState.currentYear;
+            document.getElementById('scenario-count').textContent = gameState.currentScenario + 1;
             
             displayScenario();
         }
 
-        // Initialize intro screen on load
-        // Game will start when player clicks the button
+        function showGameComplete() {
+            const dominantCulture = Object.keys(gameState.culturalChoices).reduce((a, b) => 
+                gameState.culturalChoices[a] > gameState.culturalChoices[b] ? a : b
+            );
+            
+            document.getElementById('scenario-title').textContent = '🎓 Transformation Complete!';
+            document.getElementById('scenario-description').innerHTML = `
+                Congratulations! You've guided your university through crisis and transformation.<br><br>
+                <strong style="color: var(--accent-cyan);">Your Leadership Style:</strong> ${dominantCulture.charAt(0).toUpperCase() + dominantCulture.slice(1)}<br><br>
+                <strong style="color: var(--accent-yellow);">Final Institution Profile:</strong><br>
+                Look at your metrics above to see what kind of university you've created!
+            `;
+            
+            document.getElementById('choices-container').innerHTML = `
+                <button class="choice-button pixel-border" onclick="location.reload()" style="text-align: center;">
+                    <div class="choice-label">🔄 Play Again</div>
+                    <div class="choice-description">Try a different management philosophy</div>
+                </button>
+            `;
+        }
+
+        // PWA features work when hosted properly on HTTPS
+        // Service worker registration removed for sandbox compatibility
+        
+        // Prevent zoom on double tap (iOS)
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+        
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set initial trend displays
+            updateAllMetrics();
+        });
+    </script>
+    
+    <!-- PWA Manifest -->
+    <script>
+        // Create and inject manifest
+        const manifest = {
+            "name": "Campus Crisis Manager",
+            "short_name": "Campus Crisis",
+            "description": "Manage your university through 4 years of crisis in this retro simulation game",
+            "start_url": "/",
+            "display": "standalone",
+            "background_color": "#1a1a1a",
+            "theme_color": "#2a2a2a",
+            "orientation": "portrait",
+            "icons": [
+                {
+                    "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' fill='%23333'/%3E%3Ctext x='96' y='120' text-anchor='middle' fill='%23fff' font-family='monospace' font-size='80'%3E🏛️%3C/text%3E%3C/svg%3E",
+                    "sizes": "192x192",
+                    "type": "image/svg+xml"
+                },
+                {
+                    "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%23333'/%3E%3Ctext x='256' y='320' text-anchor='middle' fill='%23fff' font-family='monospace' font-size='200'%3E🏛️%3C/text%3E%3C/svg%3E",
+                    "sizes": "512x512",
+                    "type": "image/svg+xml"
+                }
+            ]
+        };
+        
+        const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(manifestBlob);
+        
+        const link = document.createElement('link');
+        link.rel = 'manifest';
+        link.href = manifestURL;
+        document.head.appendChild(link);
     </script>
 </body>
-</html>
+</html> = `${Math.min(100, 40 + (diff * 2))}%`;
+                    } else if (diff < 0) {
+                        bar.className = 'trend-bar down';
+                        bar.style.height = `${Math.max(20, 40 + (diff * 2))}%`;
+                    } else {
+                        bar.className = 'trend-bar stable';
+                        bar.style.height
