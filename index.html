@@ -1845,7 +1845,7 @@
             }
             
             resultsHTML += `
-                    <button class="continue-button" onclick="continueToNextScenario()">Continue to Next Month</button>
+                    <button class="continue-button" onclick="nextScenario()">Continue to Next Month</button>
                 </div>
             `;
             
@@ -1854,19 +1854,18 @@
             document.getElementById('scenario-container').style.display = 'none';
         }
 
-        function continueToNextScenario() {
+        function nextScenario() {
+            console.log("nextScenario called, current scenario:", gameState.currentScenario);
+            
             // Check for crisis interrupt before proceeding to next scenario
             const crisisType = checkForCrisisInterrupt();
             if (crisisType) {
+                console.log("Crisis detected:", crisisType);
                 displayCrisisScenario(crisisType);
                 return;
             }
             
             // Proceed to next regular scenario
-            nextRegularScenario();
-        }
-
-        function nextRegularScenario() {
             gameState.currentScenario++;
             gameState.currentMonth++;
             
@@ -1875,16 +1874,16 @@
                 gameState.currentYear++;
             }
             
+            console.log("Moving to scenario:", gameState.currentScenario, "Month:", months[gameState.currentMonth]);
+            
             // Update display counters
-            if (document.getElementById('current-month')) {
-                document.getElementById('current-month').textContent = months[gameState.currentMonth];
-            }
-            if (document.getElementById('current-year')) {
-                document.getElementById('current-year').textContent = gameState.currentYear;
-            }
-            if (document.getElementById('scenario-count')) {
-                document.getElementById('scenario-count').textContent = gameState.currentScenario + 1;
-            }
+            const monthElement = document.getElementById('current-month');
+            const yearElement = document.getElementById('current-year');
+            const countElement = document.getElementById('scenario-count');
+            
+            if (monthElement) monthElement.textContent = months[gameState.currentMonth];
+            if (yearElement) yearElement.textContent = gameState.currentYear;
+            if (countElement) countElement.textContent = gameState.currentScenario + 1;
             
             document.getElementById('results-container').style.display = 'none';
             document.getElementById('scenario-container').style.display = 'block';
