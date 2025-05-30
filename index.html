@@ -1,525 +1,26 @@
-    <script>
-        // Game state
-        let gameState = {
-            currentScenario: 0,
-            currentMonth: 0,
-            currentYear: 1,
-            metrics: {
-                financial: 60,
-                reputation: 65,
-                research: 70,
-                staff: 55,
-                student: 60,
-                local: 50
-            },
-            metricsHistory: {
-                financial: [60],
-                reputation: [65],
-                research: [70],
-                staff: [55],
-                student: [60],
-                local: [50]
-            },
-            culturalChoices: {
-                community: 0,
-                individualistic: 0,
-                corporate: 0,
-                nurturing: 0
-            }
-        };
-
-        // Month names (single declaration)
-        const months = [
-            "September", "October", "November", "December", 
-            "January", "February", "March", "April", 
-            "May", "June", "July", "August"
-        ];
-
-        // PWA variables
-        let deferredPrompt;
-        let isAppInstalled = false;
-        let activeCrisis = null;
-        let crisisHistory = {};
-
-        // Save/Load Functions
-        function saveGame() {
-            try {
-                const saveData = {
-                    version: "1.0",
-                    timestamp: Date.now(),
-                    gameState: gameState,
-                    activeCrisis: activeCrisis,
-                    crisisHistory: crisisHistory
-                };
-                localStorage.setItem('campusSimulatorSave', JSON.stringify(saveData));
-                return true;
-            } catch (error) {
-                console.error("Failed to save game:", error);
-                return false;
-            }
-        }
-
-        function loadGame() {
-            try {
-                const saveData = localStorage.getItem('campusSimulatorSave');
-                if (!saveData) return false;
-                
-                const parsedData = JSON.parse(saveData);
-                gameState = parsedData.gameState || gameState;
-                activeCrisis = parsedData.activeCrisis || null;
-                crisisHistory = parsedData.crisisHistory || {};
-                
-                return true;
-            } catch (error) {
-                console.error("Failed to load game:", error);
-                return false;
-            }
-        }
-
-        // Save/Load Functions (simplified for demo)
-        function saveGame() {
-            try {
-                const saveData = {
-                    version: "1.0",
-                    timestamp: Date.now(),
-                    gameState: gameState,
-                    activeCrisis: activeCrisis,
-                    crisisHistory: crisisHistory
-                };
-                localStorage.setItem('campusSimulatorSave', JSON.stringify(saveData));
-                return true;
-            } catch (error) {
-                console.log("Save not available in demo environment");
-                return false;
-            }
-        }
-
-        function loadGame() {
-            try {
-                const saveData = localStorage.getItem('campusSimulatorSave');
-                if (!saveData) return false;
-                
-                const parsedData = JSON.parse(saveData);
-                gameState = parsedData.gameState || gameState;
-                activeCrisis = parsedData.activeCrisis || null;
-                crisisHistory = parsedData.crisisHistory || {};
-                
-                return true;
-            } catch (error) {
-                console.log("Load not available in demo environment");
-                return false;
-            }
-        }
-
-        function autoSave() {
-            saveGame();
-        }
-
-        function showContinuePrompt() {
-            const continueHTML = `
-                <div class="title">🏛️ CAMPUS SIMULATOR 🏛️</div>
-                <div style="background-color: #0a0a0a; border: 1px solid #00ff00; padding: 20px; margin: 20px 0; border-radius: 5px; text-align: center;">
-                    <div style="color: #00ffff; font-size: 18px; margin-bottom: 15px;">Welcome Back!</div>
-                    <div style="color: #cccccc; margin-bottom: 20px;">
-                        You have a game in progress:<br>
-                        <strong style="color: #ffff00;">Year ${gameState.currentYear}, ${months[gameState.currentMonth]}</strong><br>
-                        Scenario ${gameState.currentScenario + 1} of 30
-                    </div>
-                    <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                        <button class="continue-button" onclick="resumeGame()" style="background-color: #003300;">
-                            📱 Continue Game
-                        </button>
-                        <button class="continue-button" onclick="startNewGame()" style="background-color: #330000;">
-                            🆕 Start Over
-                        </button>
-                    </div>
-                </div>
-            `;
-            document.getElementById('intro-screen').innerHTML = continueHTML;
-        }
-
-        function resumeGame() {
-            startGame();
-        }
-
-        function startNewGame() {
-            // Reset game state
-            gameState = {
-                currentScenario: 0,
-                currentMonth: 0,
-                currentYear: 1,
-                metrics: { financial: 60, reputation: 65, research: 70, staff: 55, student: 60, local: 50 },
-                metricsHistory: { financial: [60], reputation: [65], research: [70], staff: [55], student: [60], local: [50] },
-                culturalChoices: { community: 0, individualistic: 0, corporate: 0, nurturing: 0 }
-            };
-            activeCrisis = null;
-            crisisHistory = {};
-            showIntroScreen();
-        }
-
-        function showIntroScreen() {
-            const introHTML = `
-                <div class="title">🏛️ CAMPUS SIMULATOR 🏛️</div>
-                <div style="background-color: #0a0a0a; border: 1px solid #00ff00; padding: 20px; margin: 20px 0; border-radius: 5px;">
-                    <div style="color: #00ffff; font-size: 18px; margin-bottom: 15px; font-weight: bold;">
-                        Welcome, Campus Manager!
-                    </div>
-                    <div style="color: #cccccc; line-height: 1.8; margin-bottom: 20px;">
-                        You've been appointed to manage a university through <strong style="color: #ffff00;">four years of crisis and transformation</strong>. 
-                        Your decisions will shape the institution's future and determine what kind of educational community you create.
-                    </div>
-                    <div style="color: #00ffff; font-size: 16px; margin: 20px 0 10px 0; font-weight: bold;">
-                        🎯 Your Mission:
-                    </div>
-                    <div style="color: #cccccc; margin-bottom: 20px;">
-                        Balance <strong style="color: #00ff00;">six key metrics</strong> while navigating crises, scandals, and recovery. 
-                        Each decision reflects a different economic philosophy - choose wisely!
-                    </div>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 20px 0; font-size: 12px;">
-                        <div style="color: #00ff00;">💰 Financial</div>
-                        <div style="color: #00ff00;">⭐ Reputation</div>
-                        <div style="color: #00ff00;">🔬 Research</div>
-                        <div style="color: #00ff00;">👥 Staff Morale</div>
-                        <div style="color: #00ff00;">🎓 Students</div>
-                        <div style="color: #00ff00;">🏘️ Local Impact</div>
-                    </div>
-                    <div style="text-align: center; margin-top: 30px;">
-                        <button class="continue-button" onclick="startGame()" style="font-size: 18px; padding: 15px 30px;">
-                            🚀 Begin Your Journey
-                        </button>
-                    </div>
-                </div>
-            `;
-            document.getElementById('intro-screen').innerHTML = introHTML;
-        }
-
-        // Initialize on load - simplified
-        window.addEventListener('load', () => {
-            showIntroScreen();
-        });
-
-        function showContinuePrompt() {
-            const continueHTML = `
-                <div class="title">🏛️ CAMPUS SIMULATOR 🏛️</div>
-                <div style="background-color: #0a0a0a; border: 1px solid #00ff00; padding: 20px; margin: 20px 0; border-radius: 5px; text-align: center;">
-                    <div style="color: #00ffff; font-size: 18px; margin-bottom: 15px;">Welcome Back!</div>
-                    <div style="color: #cccccc; margin-bottom: 20px;">
-                        You have a game in progress:<br>
-                        <strong style="color: #ffff00;">Year ${gameState.currentYear}, ${months[gameState.currentMonth]}</strong><br>
-                        Scenario ${gameState.currentScenario + 1} of 30
-                    </div>
-                    <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                        <button class="continue-button" onclick="resumeGame()" style="background-color: #003300;">
-                            📱 Continue Game
-                        </button>
-                        <button class="continue-button" onclick="startNewGame()" style="background-color: #330000;">
-                            🆕 Start Over
-                        </button>
-                    </div>
-                </div>
-            `;
-            document.getElementById('intro-screen').innerHTML = continueHTML;
-        }
-
-        function resumeGame() {
-            document.getElementById('intro-screen').style.display = 'none';
-            document.getElementById('game-screen').style.display = 'block';
-            
-            const gameContent = createGameScreenHTML();
-            document.getElementById('game-screen').innerHTML = gameContent;
-            
-            // Initialize displays
-            updateAllMetrics();
-            Object.keys(gameState.metrics).forEach(metric => {
-                updateTrendLine(metric);
-            });
-            
-            // Check if we're in a crisis or normal scenario
-            const crisisType = findActiveCrisis();
-            if (crisisType && shouldRepeatCrisis(crisisType)) {
-                showCrisisScenario(crisisType);
-            } else {
-                displayScenario();
-            }
-        }
-
-        function startNewGame() {
-            // Clear save data
-            localStorage.removeItem('campusSimulatorSave');
-            
-            // Reset game state
-            gameState = {
-                currentScenario: 0,
-                currentMonth: 0,
-                currentYear: 1,
-                metrics: {
-                    financial: 60,
-                    reputation: 65,
-                    research: 70,
-                    staff: 55,
-                    student: 60,
-                    local: 50
-                },
-                metricsHistory: {
-                    financial: [60],
-                    reputation: [65],
-                    research: [70],
-                    staff: [55],
-                    student: [60],
-                    local: [50]
-                },
-                culturalChoices: {
-                    community: 0,
-                    individualistic: 0,
-                    corporate: 0,
-                    nurturing: 0
-                }
-            };
-            
-            activeCrisis = null;
-            crisisHistory = {};
-            
-            showIntroScreen();
-        }
-
-        function showIntroScreen() {
-            const introHTML = `
-                <div class="title">🏛️ CAMPUS SIMULATOR 🏛️</div>
-                
-                <div style="background-color: #0a0a0a; border: 1px solid #00ff00; padding: 20px; margin: 20px 0; border-radius: 5px;">
-                    <div style="color: #00ffff; font-size: 18px; margin-bottom: 15px; font-weight: bold;">
-                        Welcome, Campus Manager!
-                    </div>
-                    
-                    <div style="color: #cccccc; line-height: 1.8; margin-bottom: 20px;">
-                        You've just been appointed to manage a university through <strong style="color: #ffff00;">four years of crisis and transformation</strong>. 
-                        Your decisions will shape the institution's future and determine what kind of educational community you create.
-                    </div>
-                    
-                    <div style="color: #00ffff; font-size: 16px; margin: 20px 0 10px 0; font-weight: bold;">
-                        🎯 Your Mission:
-                    </div>
-                    
-                    <div style="color: #cccccc; margin-bottom: 20px;">
-                        Balance <strong style="color: #00ff00;">six key metrics</strong> while navigating crises, scandals, and recovery. 
-                        Each decision reflects a different economic philosophy - choose wisely, as your choices compound over time!
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 20px 0; font-size: 12px;">
-                        <div style="color: #00ff00;">💰 Financial</div>
-                        <div style="color: #00ff00;">⭐ Reputation</div>
-                        <div style="color: #00ff00;">🔬 Research</div>
-                        <div style="color: #00ff00;">👥 Staff Morale</div>
-                        <div style="color: #00ff00;">🎓 Students</div>
-                        <div style="color: #00ff00;">🏘️ Local Impact</div>
-                    </div>
-                    
-                    <div style="color: #00ffff; font-size: 16px; margin: 20px 0 10px 0; font-weight: bold;">
-                        📊 Dashboard Guide:
-                    </div>
-                    
-                    <div style="color: #cccccc; margin-bottom: 15px; font-size: 13px;">
-                        <strong style="color: #00ff00;">Green (70-100):</strong> Thriving<br>
-                        <strong style="color: #ffff00;">Yellow (40-69):</strong> Warning<br>
-                        <strong style="color: #ff6666;">Red (0-39):</strong> Crisis!
-                    </div>
-                    
-                    <div style="color: #cccccc; margin-bottom: 20px; font-size: 13px;">
-                        <strong style="color: #00ffff;">Trend Lines:</strong>
-                        <strong style="color: #00ff00;">Green</strong> = Improving, 
-                        <strong style="color: #ffff00;">Yellow</strong> = Stable, 
-                        <strong style="color: #ff6666;">Red</strong> = Declining
-                    </div>
-                    
-                    <div style="background-color: #1a1a00; border: 1px solid #ffff00; padding: 15px; margin: 20px 0; border-radius: 5px;">
-                        <div style="color: #ffff00; font-weight: bold; margin-bottom: 10px;">💾 Auto-Save Enabled</div>
-                        <div style="color: #cccccc; font-size: 13px;">
-                            Your progress saves automatically. Perfect for daily check-ins!
-                        </div>
-                    </div>
-                    
-                    <div style="text-align: center; margin-top: 30px;">
-                        <button class="continue-button" onclick="startGame()" style="font-size: 18px; padding: 15px 30px;">
-                            🚀 Begin Your Journey
-                        </button>
-                    </div>
-                </div>
-            `;
-            document.getElementById('intro-screen').innerHTML = introHTML;
-        }
-
-        function createGameScreenHTML() {
-            return `
-                <div class="title">🏛️ CAMPUS SIMULATOR 🏛️</div>
-                
-                <div class="game-info">
-                    <div>Month: <span id="current-month">${months[gameState.currentMonth]}</span> | Year: <span id="current-year">${gameState.currentYear}</span></div>
-                    <div>Scenario: <span id="scenario-count">${gameState.currentScenario + 1}</span> of 30</div>
-                </div>
-                
-                <div class="metrics-display">
-                    <div class="metric">
-                        <span class="metric-name">Financial:</span>
-                        <div class="metric-info">
-                            <svg class="trend-line" id="financial-trend" viewBox="0 0 50 16" preserveAspectRatio="none">
-                                <polyline class="trend-path yellow" id="financial-path" points=""></polyline>
-                            </svg>
-                            <span class="metric-value" id="financial-value">${gameState.metrics.financial}</span>
-                        </div>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-name">Reputation:</span>
-                        <div class="metric-info">
-                            <svg class="trend-line" id="reputation-trend" viewBox="0 0 50 16" preserveAspectRatio="none">
-                                <polyline class="trend-path yellow" id="reputation-path" points=""></polyline>
-                            </svg>
-                            <span class="metric-value" id="reputation-value">${gameState.metrics.reputation}</span>
-                        </div>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-name">Research:</span>
-                        <div class="metric-info">
-                            <svg class="trend-line" id="research-trend" viewBox="0 0 50 16" preserveAspectRatio="none">
-                                <polyline class="trend-path yellow" id="research-path" points=""></polyline>
-                            </svg>
-                            <span class="metric-value" id="research-value">${gameState.metrics.research}</span>
-                        </div>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-name">Staff:</span>
-                        <div class="metric-info">
-                            <svg class="trend-line" id="staff-trend" viewBox="0 0 50 16" preserveAspectRatio="none">
-                                <polyline class="trend-path yellow" id="staff-path" points=""></polyline>
-                            </svg>
-                            <span class="metric-value" id="staff-value">${gameState.metrics.staff}</span>
-                        </div>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-name">Students:</span>
-                        <div class="metric-info">
-                            <svg class="trend-line" id="student-trend" viewBox="0 0 50 16" preserveAspectRatio="none">
-                                <polyline class="trend-path yellow" id="student-path" points=""></polyline>
-                            </svg>
-                            <span class="metric-value" id="student-value">${gameState.metrics.student}</span>
-                        </div>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-name">Local:</span>
-                        <div class="metric-info">
-                            <svg class="trend-line" id="local-trend" viewBox="0 0 50 16" preserveAspectRatio="none">
-                                <polyline class="trend-path yellow" id="local-path" points=""></polyline>
-                            </svg>
-                            <span class="metric-value" id="local-value">${gameState.metrics.local}</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="scenario" id="scenario-container">
-                    <!-- Scenario content will be inserted here -->
-                </div>
-                
-                <div id="results-container" style="display: none;">
-                    <!-- Results will be shown here -->
-                </div>
-            `;
-        }<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Campus Simulator</title>
-    <meta name="description" content="Manage a university through crisis and transformation. Learn economics through gameplay.">
-    <meta name="theme-color" content="#00ff00">
-    
-    <!-- PWA Meta Tags -->
-    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkNhbXB1cyBTaW11bGF0b3IiLAogICJzaG9ydF9uYW1lIjogIkNhbXB1cyBTaW0iLAogICJkZXNjcmlwdGlvbiI6ICJNYW5hZ2UgYSB1bml2ZXJzaXR5IHRocm91Z2ggY3Jpc2lzIGFuZCB0cmFuc2Zvcm1hdGlvbi4gTGVhcm4gZWNvbm9taWNzIHRocm91Z2ggZ2FtZXBsYXkuIiwKICAic3RhcnRfdXJsIjogIi8iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMxYTFhMWEiLAogICJ0aGVtZV9jb2xvciI6ICIjMDBmZjAwIiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTWpRaUlHaGxhV2RvZEQwaU1qUWlJR1pwYkd3OUlpTXdNR1ptTURBaUlIWnBaWGRDYjNnOUlqQWdNQ0F5TkNBeU5DSStQSFJsZUhRZ2VEMGlNaUlnZVQwaU1UWWlJR1pwYkd3OUlpTXdNR1ptTURBaVBqazJNem9tSTJJc092c25KeTQyT21wdE1qODhMMlJsWm5NK1BDOXpkbWMrIiwKICAgICAgInNpemVzIjogIjI0eDI0IiwKICAgICAgInR5cGUiOiAiaW1hZ2Uvc3ZnK3htbCIKICAgIH0sCiAgICB7CiAgICAgICJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTkRnaUlHaGxhV2RvZEQwaU5EZ2lJR1pwYkd3OUlpTXdNR1ptTURBaUlIWnBaWGRDYjNnOUlqQWdNQ0EwT0NBME9DSStQSFJsZUhRZ2VEMGlOQ0lnZVQwaU16SWlJR1pwYkd3OUlpTXdNR1ptTURBaVBqazJNem9tSTJJc085c25KeTQyT21wdE1qODhMMlJsWm5NK1BDOXpkbWMrIiwKICAgICAgInNpemVzIjogIjQ4eDQ4IiwKICAgICAgInR5cGUiOiAiaW1hZ2Uvc3ZnK3htbCIKICAgIH0sCiAgICB7CiAgICAgICJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTVRrd0lpQm9aV2xuYUhROU9qRXdNQ0lnWm1sc2JEMGlJekF3Wm1Zd01DSWdkbWxsZDBKdmVEMGlNQ0F3SURFNU1DQXhPVEFpUGp4MFpYaDBJSGc5SWpFd0lpQjVQU0k1TmtJblBqazJPRHNtUXpKRE9UTWdKek16T1RvbUkzSnNOMG9tUjJGNE1UQTRQQzluWW1Zc1BDOTBaWGgwUGp3dmMzWm5QZz09IiwKICAgICAgInNpemVzIjogIjE5MngxOTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9zdmcreG1sIgogICAgfSwKICAgIHsKICAgICAgInNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUIzYVdSMGFEMGlOVEV5SWlCb1pXbG5hSFE5SWpVeE1rSWdabWxzYkQwaUl6QXdabVl3TUNJZ2RtbGxkMEp2ZUQwaU1DQXdJRFV4TWlBMU1USmNQang0WkdwMElIZzlJakkxTmlJZ2VUMGlNalUySWlCbWFXeHNQU0lqTURCbVpqQXdJajQ0TnprNmJIaGlKRzQySXlKaE5EWjBZVzF3TzJOMGJHdGphejEzWVdGVFZWcERPRzQzQm5SMmJXaGFjV2sxTlNLUmJXVmhST3AvUEM5MFpYaDBQand2YzNabmNUMGkiLAogICAgICAic2l6ZXMiOiAiNTEyeDUxMiIsCiAgICAgICJ0eXBlIjogImltYWdlL3N2Zyt4bWwiCiAgICB9CiAgXQp9">
-    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgZmlsbD0iIzAwZmYwMCIgdmlld0JveD0iMCAwIDE5MiAxOTIiPjx0ZXh0IHg9IjEwIiB5PSI5NiI+9638O2M2RzM5OzsKIC0gNVdJQjU1Q3RCc0plT244UzwvdGV4dD48L3N2Zz4=">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
     <style>
         body {
             font-family: 'Courier New', monospace;
             background-color: #1a1a1a;
             color: #00ff00;
             margin: 0;
-            padding: 10px;
+            padding: 20px;
             line-height: 1.6;
-            min-height: 100vh;
-            /* Mobile optimizations */
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            touch-action: manipulation;
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
         }
         
         .container {
-            max-width: 100%;
+            max-width: 800px;
             margin: 0 auto;
             background-color: #0d1b0d;
             border: 2px solid #00ff00;
-            padding: 15px;
+            padding: 20px;
             border-radius: 10px;
-            /* Mobile responsiveness */
-            box-sizing: border-box;
-        }
-        
-        /* Mobile-first responsive design */
-        @media (max-width: 768px) {
-            body {
-                padding: 5px;
-                font-size: 14px;
-            }
-            
-            .container {
-                padding: 10px;
-                border-radius: 5px;
-            }
-            
-            .title {
-                font-size: 18px !important;
-                margin-bottom: 15px !important;
-            }
-            
-            .metrics-display {
-                grid-template-columns: 1fr !important;
-                gap: 10px !important;
-                font-size: 13px;
-            }
-            
-            .choice-button {
-                padding: 12px !important;
-                font-size: 13px !important;
-                margin-bottom: 8px !important;
-            }
-            
-            .scenario-description {
-                font-size: 13px !important;
-                line-height: 1.5 !important;
-            }
-            
-            .continue-button {
-                padding: 12px 20px !important;
-                font-size: 14px !important;
-            }
-        }
-        
-        @media (min-width: 769px) {
-            .container {
-                max-width: 800px;
-            }
-            
-            .metrics-display {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-        
-        @media (min-width: 1024px) {
-            .metrics-display {
-                grid-template-columns: repeat(3, 1fr);
-            }
         }
         
         .title {
@@ -532,6 +33,7 @@
         
         .metrics-display {
             display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 15px;
             margin-bottom: 20px;
             padding: 15px;
@@ -544,8 +46,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 5px;
         }
         
         .metric-info {
@@ -555,13 +55,12 @@
         }
         
         .trend-line {
-            width: 50px;
-            height: 16px;
+            width: 60px;
+            height: 20px;
             background-color: #000;
             border: 1px solid #333;
             position: relative;
             overflow: hidden;
-            flex-shrink: 0;
         }
         
         .trend-path {
@@ -581,18 +80,19 @@
             stroke: #ff6666;
         }
         
+        .trend-dot {
+            fill: #ffffff;
+            r: 1;
+        }
+        
         .metric-name {
             font-weight: bold;
-            font-size: 12px;
         }
         
         .metric-value {
             font-weight: bold;
             padding: 2px 8px;
             border-radius: 3px;
-            font-size: 14px;
-            min-width: 30px;
-            text-align: center;
         }
         
         .green { background-color: #004400; color: #00ff00; }
@@ -617,13 +117,12 @@
         .scenario-description {
             margin-bottom: 20px;
             color: #cccccc;
-            line-height: 1.6;
         }
         
         .choices {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
         }
         
         .choice-button {
@@ -637,20 +136,11 @@
             transition: all 0.3s;
             font-family: inherit;
             font-size: 14px;
-            /* Mobile touch optimization */
-            min-height: 44px;
-            touch-action: manipulation;
         }
         
-        .choice-button:hover, .choice-button:focus {
+        .choice-button:hover {
             background-color: #004400;
             box-shadow: 0 0 10px #00ff00;
-            outline: none;
-        }
-        
-        .choice-button:active {
-            background-color: #005500;
-            transform: translateY(1px);
         }
         
         .choice-label {
@@ -663,7 +153,6 @@
             text-align: center;
             margin-bottom: 20px;
             color: #888888;
-            font-size: 14px;
         }
         
         .results {
@@ -682,7 +171,6 @@
         
         .metric-change {
             margin: 5px 0;
-            font-size: 13px;
         }
         
         .positive { color: #00ff00; }
@@ -700,20 +188,11 @@
             font-size: 16px;
             display: block;
             margin: 20px auto;
-            /* Mobile touch optimization */
-            min-height: 44px;
-            touch-action: manipulation;
         }
         
-        .continue-button:hover, .continue-button:focus {
+        .continue-button:hover {
             background-color: #004488;
             box-shadow: 0 0 10px #00ffff;
-            outline: none;
-        }
-        
-        .continue-button:active {
-            background-color: #0055aa;
-            transform: translateY(1px);
         }
         
         .triggers {
@@ -729,46 +208,9 @@
             font-weight: bold;
             margin-bottom: 5px;
         }
-        
-        /* Install prompt styles */
-        .install-prompt {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            background-color: #0d1b0d;
-            border: 2px solid #00ff00;
-            border-radius: 10px;
-            padding: 15px;
-            color: #00ff00;
-            text-align: center;
-            z-index: 1000;
-            display: none;
-        }
-        
-        .install-button {
-            background-color: #003300;
-            color: #00ff00;
-            border: 1px solid #00ff00;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-family: inherit;
-            margin: 10px 5px 0 5px;
-        }
-        
-        .install-button:hover {
-            background-color: #004400;
-        }
     </style>
 </head>
 <body>
-        <div id="install-prompt" class="install-prompt">
-            <div>📱 Install Campus Simulator on your device for daily check-ins!</div>
-            <button class="install-button" onclick="installApp()">Install App</button>
-            <button class="install-button" onclick="dismissInstallPrompt()">Maybe Later</button>
-        </div>
-        
         <div id="intro-screen" class="container">
             <div class="title">🏛️ CAMPUS SIMULATOR 🏛️</div>
             
@@ -2708,62 +2150,8 @@
             updateAllMetrics();
             recordMetricsInHistory();
             
-            // Auto-save after choice
-            autoSave();
-            
             // Show results
             showResults(choice, oldMetrics, cascadeMessage + positiveMessage);
-        }
-
-        function handleCrisisChoice(crisisType, choiceIndex) {
-            console.log("HANDLING CRISIS CHOICE:", crisisType, choiceIndex);
-            
-            // Record the current value before applying effects
-            const valueBeforeChoice = gameState.metrics[crisisType];
-            console.log(`Recording ${crisisType} value before choice:`, valueBeforeChoice);
-            
-            const crisis = crisisScenarios[crisisType];
-            const choice = crisis.choices[choiceIndex];
-            
-            // Track cultural choice
-            gameState.culturalChoices[choice.culture]++;
-            
-            // Apply effects
-            const oldMetrics = {...gameState.metrics};
-            Object.keys(choice.effects).forEach(metric => {
-                gameState.metrics[metric] = Math.max(0, Math.min(100, gameState.metrics[metric] + choice.effects[metric]));
-            });
-            
-            // Apply cascade effects
-            const cascadeMessage = applyCascadeEffects();
-            const positiveMessage = applyPositiveCascades();
-            
-            // Update display and record in history
-            updateAllMetrics();
-            recordMetricsInHistory();
-            
-            // Auto-save after crisis choice
-            autoSave();
-            
-            // Record the crisis value for comparison next time
-            crisisHistory[crisisType] = gameState.metrics[crisisType];
-            console.log(`Updated crisis history for ${crisisType}:`, crisisHistory[crisisType]);
-            
-            // Check if crisis is resolved (above 40) or improved
-            const crisisResolved = gameState.metrics[crisisType] >= 40;
-            const crisisImproved = gameState.metrics[crisisType] > valueBeforeChoice;
-            
-            console.log("Crisis resolved?", crisisResolved, `(${crisisType} = ${gameState.metrics[crisisType]})`);
-            console.log("Crisis improved?", crisisImproved, `(${valueBeforeChoice} → ${gameState.metrics[crisisType]})`);
-            
-            if (crisisResolved) {
-                activeCrisis = null; // Clear active crisis
-                delete crisisHistory[crisisType]; // Clear history
-                console.log("Crisis fully resolved - clearing history");
-            }
-            
-            // Show crisis results
-            showCrisisResults(choice, oldMetrics, cascadeMessage + positiveMessage, crisisType, crisisResolved, crisisImproved);
         }
 
         function showResults(choice, oldMetrics, cascadeMessage) {
@@ -3084,66 +2472,8 @@
             displayScenario();
         }
 
-        // Check if running as installed PWA
-        function isRunningStandalone() {
-            return window.matchMedia('(display-mode: standalone)').matches || 
-                   window.navigator.standalone === true;
-        }
-
-        // Service Worker Registration
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                const swCode = `
-                    const CACHE_NAME = 'campus-simulator-v1';
-                    const urlsToCache = ['/'];
-                    
-                    self.addEventListener('install', (event) => {
-                        event.waitUntil(
-                            caches.open(CACHE_NAME)
-                                .then((cache) => cache.addAll(urlsToCache))
-                        );
-                    });
-                    
-                    self.addEventListener('fetch', (event) => {
-                        event.respondWith(
-                            caches.match(event.request)
-                                .then((response) => response || fetch(event.request))
-                        );
-                    });
-                `;
-                
-                const blob = new Blob([swCode], { type: 'application/javascript' });
-                const swUrl = URL.createObjectURL(blob);
-                
-                navigator.serviceWorker.register(swUrl)
-                    .then((registration) => {
-                        console.log('ServiceWorker registration successful');
-                    })
-                    .catch((error) => {
-                        console.log('ServiceWorker registration failed: ', error);
-                    });
-            });
-        }
-
-        // Initialize intro screen on load - game will start when player clicks the button
-        window.addEventListener('load', () => {
-            // Check if app is installed
-            if (isRunningStandalone()) {
-                isAppInstalled = true;
-                console.log('Running as installed PWA');
-            }
-            
-            // Try to load saved game
-            const hasLoadedGame = loadGame();
-            
-            if (hasLoadedGame && gameState.currentScenario > 0) {
-                // Game in progress - ask if they want to continue
-                showContinuePrompt();
-            } else {
-                // New game - show intro
-                showIntroScreen();
-            }
-        });
+        // Initialize intro screen on load
+        // Game will start when player clicks the button
     </script>
 </body>
 </html>
