@@ -20,29 +20,40 @@
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         
         :root {
-            /* 16-bit Color Palette */
+            /* Enhanced 16-bit Color Palette */
             --bg-dark: #1a1a1a;
             --bg-med: #2a2a2a;
             --bg-light: #3a3a3a;
-            --border-main: #4a4a4a;
+            --border-main: #555555;
+            --border-accent: #777777;
             --text-primary: #ffffff;
-            --text-secondary: #cccccc;
-            --text-dim: #888888;
+            --text-secondary: #e0e0e0;
+            --text-dim: #aaaaaa;
+            
+            /* Scenario background - clean white for readability */
+            --scenario-bg: #f8f8f8;
+            --scenario-text: #333333;
+            --scenario-border: #cccccc;
             
             /* Status Colors */
-            --health-good: #00aa00;
-            --health-warn: #ffaa00;
-            --health-bad: #aa0000;
-            --crisis-bg: #330000;
-            --crisis-border: #aa0000;
+            --health-good: #00bb00;
+            --health-warn: #ff9900;
+            --health-bad: #dd0000;
+            --crisis-bg: #440000;
+            --crisis-border: #dd0000;
+            
+            /* Trend Colors */
+            --trend-up: #00cc00;
+            --trend-stable: #ffaa00;
+            --trend-down: #cc0000;
             
             /* UI Colors */
-            --button-bg: #333333;
-            --button-hover: #444444;
-            --button-active: #555555;
-            --accent-blue: #0066aa;
-            --accent-cyan: #00aaaa;
-            --accent-yellow: #aaaa00;
+            --button-bg: #444444;
+            --button-hover: #555555;
+            --button-active: #666666;
+            --accent-blue: #3388dd;
+            --accent-cyan: #00bbdd;
+            --accent-yellow: #ddaa00;
         }
         
         * {
@@ -53,7 +64,7 @@
         
         body {
             font-family: 'Press Start 2P', monospace;
-            font-size: 8px;
+            font-size: 16px;
             line-height: 1.6;
             background: var(--bg-dark);
             color: var(--text-primary);
@@ -64,52 +75,70 @@
             text-size-adjust: none;
         }
         
+        /* Responsive font scaling - much more readable */
+        @media (min-width: 768px) {
+            body { font-size: 18px; }
+        }
+        
+        @media (min-width: 1024px) {
+            body { font-size: 20px; }
+        }
+        
         .game-container {
-            max-width: 100vw;
+            max-width: 1200px;
+            margin: 0 auto;
             min-height: 100vh;
-            padding: 8px;
+            padding: 12px;
             background: 
-                radial-gradient(circle at 25% 25%, rgba(0,102,170,0.1) 0%, transparent 25%),
-                radial-gradient(circle at 75% 75%, rgba(170,170,0,0.05) 0%, transparent 25%),
+                radial-gradient(circle at 25% 25%, rgba(51,136,221,0.1) 0%, transparent 25%),
+                radial-gradient(circle at 75% 75%, rgba(221,170,0,0.05) 0%, transparent 25%),
                 var(--bg-dark);
         }
         
-        /* 16-bit Style Borders */
+        /* Enhanced 16-bit Style Borders */
         .pixel-border {
-            border: 2px solid var(--border-main);
-            border-image: 
-                url("data:image/svg+xml,%3csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m0 0h8v8h-8zm92 0h8v8h-8zm0 92h8v8h-8zm-92 0h8v8h-8z' fill='%23666'/%3e%3c/svg%3e") 
-                8 repeat;
-            background: var(--bg-med);
-        }
-        
-        .pixel-border-thick {
             border: 3px solid var(--border-main);
+            background: var(--bg-med);
             position: relative;
         }
         
-        .pixel-border-thick::before {
+        .pixel-border::before {
             content: '';
             position: absolute;
             top: -1px;
             left: -1px;
             right: -1px;
             bottom: -1px;
-            border: 1px solid var(--text-dim);
+            border: 1px solid var(--border-accent);
+            pointer-events: none;
+        }
+        
+        .pixel-border-thick {
+            border: 4px solid var(--border-main);
+            position: relative;
+        }
+        
+        .pixel-border-thick::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border: 2px solid var(--border-accent);
             pointer-events: none;
         }
         
         /* Header */
         .game-header {
             text-align: center;
-            margin-bottom: 12px;
-            padding: 12px 8px;
+            margin-bottom: 16px;
+            padding: 16px;
             background: linear-gradient(135deg, var(--bg-med), var(--bg-light));
-            border-radius: 0;
         }
         
         .game-title {
-            font-size: 12px;
+            font-size: 1.2em;
             color: var(--accent-cyan);
             text-shadow: 2px 2px 0px var(--bg-dark);
             margin-bottom: 8px;
@@ -117,150 +146,177 @@
         }
         
         .game-subtitle {
-            font-size: 6px;
+            font-size: 0.6em;
             color: var(--text-secondary);
-            margin-bottom: 4px;
+            margin-bottom: 8px;
         }
         
         .game-info {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 7px;
+            font-size: 0.7em;
             color: var(--text-dim);
-            margin-top: 8px;
+            margin-top: 12px;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 12px;
         }
         
-        @media (max-width: 480px) {
+        @media (max-width: 600px) {
             .game-info {
                 flex-direction: column;
                 text-align: center;
-                gap: 4px;
+                gap: 6px;
             }
         }
         
         /* Metrics Display */
         .metrics-container {
-            margin-bottom: 16px;
-            padding: 12px;
+            margin-bottom: 20px;
+            padding: 16px;
         }
         
         .metrics-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
             margin-bottom: 12px;
         }
         
-        @media (max-width: 360px) {
+        @media (max-width: 640px) {
             .metrics-grid {
                 grid-template-columns: 1fr;
-                gap: 6px;
+                gap: 10px;
             }
         }
         
         .metric-card {
             background: var(--bg-light);
-            border: 2px solid var(--border-main);
-            padding: 8px;
+            border: 3px solid var(--border-main);
+            padding: 12px;
             position: relative;
-            min-height: 48px;
+            min-height: 60px;
         }
         
         .metric-name {
-            font-size: 7px;
+            font-size: 0.7em;
             color: var(--text-secondary);
-            margin-bottom: 4px;
+            margin-bottom: 6px;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
         .metric-display {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 8px;
+            gap: 12px;
         }
         
         .metric-value {
-            font-size: 11px;
+            font-size: 1.2em;
             font-weight: bold;
-            padding: 4px 8px;
-            border: 1px solid var(--border-main);
-            min-width: 32px;
+            padding: 6px 12px;
+            border: 2px solid var(--border-main);
+            min-width: 50px;
             text-align: center;
         }
         
         .metric-value.good { 
             background: var(--health-good); 
             color: white;
-            border-color: #00cc00;
+            border-color: #00dd00;
         }
         .metric-value.warn { 
             background: var(--health-warn); 
-            color: black;
-            border-color: #ffcc00;
+            color: white;
+            border-color: #ffbb00;
         }
         .metric-value.bad { 
             background: var(--health-bad); 
             color: white;
-            border-color: #cc0000;
+            border-color: #ff0000;
         }
         
-        /* Pixel Art Trend Indicators */
+        /* Enhanced Trend Indicators */
         .trend-indicator {
-            width: 24px;
-            height: 16px;
+            width: 40px;
+            height: 24px;
             background: var(--bg-dark);
-            border: 1px solid var(--border-main);
+            border: 2px solid var(--border-main);
             position: relative;
             overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
-        .trend-bars {
+        .trend-display {
+            width: 28px;
+            height: 16px;
             display: flex;
             align-items: end;
-            height: 100%;
-            padding: 2px;
             gap: 1px;
+            padding: 2px;
         }
         
         .trend-bar {
             flex: 1;
-            background: var(--text-dim);
-            min-height: 2px;
+            background: var(--trend-stable);
+            min-height: 3px;
+            transition: all 0.3s ease;
         }
         
-        .trend-bar.up { background: var(--health-good); }
-        .trend-bar.down { background: var(--health-bad); }
-        .trend-bar.stable { background: var(--health-warn); }
+        .trend-up { background: var(--trend-up) !important; }
+        .trend-down { background: var(--trend-down) !important; }
+        .trend-stable { background: var(--trend-stable) !important; }
         
-        /* Scenario Display */
+        /* Scenario Display with White Background */
         .scenario-container {
-            margin-bottom: 16px;
-            padding: 12px;
+            margin-bottom: 20px;
+            padding: 16px;
         }
         
         .scenario-card {
-            background: var(--bg-med);
-            padding: 12px;
-            margin-bottom: 12px;
+            background: var(--scenario-bg);
+            color: var(--scenario-text);
+            border: 3px solid var(--scenario-border);
+            padding: 20px;
+            margin-bottom: 16px;
+            position: relative;
+        }
+        
+        .scenario-card::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            right: -1px;
+            bottom: -1px;
+            border: 1px solid #999999;
+            pointer-events: none;
         }
         
         .scenario-title {
-            font-size: 9px;
+            font-size: 1.1em;
             color: var(--accent-yellow);
-            margin-bottom: 8px;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            margin: -8px -8px 16px -8px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            border: 2px solid var(--border-main);
         }
         
         .scenario-description {
-            font-size: 7px;
+            font-size: 1.1em;
             line-height: 1.8;
-            color: var(--text-secondary);
-            margin-bottom: 16px;
+            color: var(--scenario-text);
+            margin-bottom: 20px;
+            background: white;
+            padding: 20px;
+            border: 2px solid #dddddd;
         }
         
         /* Crisis Styling */
@@ -270,40 +326,47 @@
             animation: crisis-pulse 2s infinite;
         }
         
+        .crisis-scenario .scenario-description {
+            background: #ffeeee !important;
+            border-color: var(--crisis-border) !important;
+            color: #990000 !important;
+        }
+        
         .crisis-title {
-            color: var(--crisis-border) !important;
+            background: var(--crisis-border) !important;
+            color: white !important;
             animation: crisis-flash 1s infinite;
         }
         
         @keyframes crisis-pulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(170, 0, 0, 0.3); }
-            50% { box-shadow: 0 0 0 4px rgba(170, 0, 0, 0.1); }
+            0%, 100% { box-shadow: 0 0 0 0 rgba(221, 0, 0, 0.3); }
+            50% { box-shadow: 0 0 0 6px rgba(221, 0, 0, 0.1); }
         }
         
         @keyframes crisis-flash {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+            50% { opacity: 0.8; }
         }
         
         /* Choice Buttons */
         .choices-container {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 12px;
         }
         
         .choice-button {
             background: var(--button-bg);
-            border: 2px solid var(--border-main);
+            border: 3px solid var(--border-main);
             color: var(--text-primary);
-            padding: 12px;
+            padding: 16px;
             font-family: inherit;
-            font-size: 7px;
+            font-size: 0.8em;
             text-align: left;
             cursor: pointer;
             transition: all 0.2s ease;
             position: relative;
-            min-height: 60px;
+            min-height: 80px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -312,8 +375,8 @@
         .choice-button:hover, .choice-button:focus {
             background: var(--button-hover);
             border-color: var(--accent-cyan);
-            transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
         
         .choice-button:active {
@@ -323,91 +386,85 @@
         }
         
         .choice-label {
-            font-size: 8px;
+            font-size: 0.9em;
             color: var(--accent-cyan);
-            margin-bottom: 4px;
+            margin-bottom: 6px;
             text-transform: uppercase;
             font-weight: bold;
         }
         
         .choice-description {
-            font-size: 6px;
+            font-size: 0.9em;
             line-height: 1.6;
             color: var(--text-secondary);
         }
         
         /* Cultural Philosophy Colors */
-        .choice-button.community { border-left: 4px solid #00aaaa; }
-        .choice-button.individualistic { border-left: 4px solid #aa5555; }
-        .choice-button.corporate { border-left: 4px solid #5555aa; }
-        .choice-button.nurturing { border-left: 4px solid #55aa55; }
+        .choice-button.community { border-left: 6px solid #00bbdd; }
+        .choice-button.individualistic { border-left: 6px solid #dd5555; }
+        .choice-button.corporate { border-left: 6px solid #5555dd; }
+        .choice-button.nurturing { border-left: 6px solid #55dd55; }
         
         /* Results Display */
         .results-container {
-            margin-top: 16px;
-            padding: 12px;
+            margin-top: 20px;
+            padding: 16px;
         }
         
         .results-card {
             background: var(--bg-light);
-            padding: 12px;
-            margin-bottom: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
         }
         
         .results-title {
-            font-size: 8px;
+            font-size: 0.9em;
             color: var(--accent-blue);
-            margin-bottom: 8px;
+            margin-bottom: 12px;
             text-transform: uppercase;
         }
         
         .metric-changes {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-            margin: 8px 0;
-            font-size: 6px;
-        }
-        
-        @media (max-width: 360px) {
-            .metric-changes {
-                grid-template-columns: 1fr;
-            }
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 8px;
+            margin: 12px 0;
+            font-size: 0.7em;
         }
         
         .metric-change {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 4px;
+            padding: 6px 8px;
             background: var(--bg-dark);
-            border: 1px solid var(--border-main);
+            border: 2px solid var(--border-main);
         }
         
-        .change-positive { color: var(--health-good); }
-        .change-negative { color: var(--health-bad); }
+        .change-positive { color: var(--health-good); font-weight: bold; }
+        .change-negative { color: var(--health-bad); font-weight: bold; }
         .change-neutral { color: var(--text-dim); }
         
         /* Continue Button */
         .continue-button {
             width: 100%;
             background: var(--accent-blue);
-            border: 2px solid var(--border-main);
+            border: 3px solid var(--border-main);
             color: white;
-            padding: 16px;
+            padding: 20px;
             font-family: inherit;
-            font-size: 8px;
+            font-size: 0.9em;
             font-weight: bold;
             text-transform: uppercase;
             cursor: pointer;
-            margin-top: 16px;
+            margin-top: 20px;
             transition: all 0.2s ease;
         }
         
         .continue-button:hover {
-            background: #0077cc;
+            background: #4499ee;
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
         }
         
         .continue-button:active {
@@ -418,58 +475,65 @@
         /* Alert/Trigger Styling */
         .triggers-container {
             background: var(--health-warn);
-            color: black;
-            padding: 8px;
-            margin: 8px 0;
-            border: 2px solid #ffcc00;
+            color: var(--bg-dark);
+            padding: 12px;
+            margin: 12px 0;
+            border: 3px solid #ffcc00;
         }
         
         .triggers-title {
-            font-size: 7px;
+            font-size: 0.8em;
             font-weight: bold;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
         }
         
         .trigger-item {
-            font-size: 6px;
-            margin: 2px 0;
+            font-size: 0.7em;
+            margin: 4px 0;
+            line-height: 1.4;
         }
         
         /* Intro Screen */
         .intro-screen {
             text-align: center;
-            padding: 16px;
+            padding: 20px;
             max-width: 100%;
         }
         
         .intro-content {
-            background: var(--bg-med);
-            padding: 16px;
-            margin: 12px 0;
+            background: var(--scenario-bg);
+            color: var(--scenario-text);
+            border: 3px solid var(--scenario-border);
+            padding: 24px;
+            margin: 16px 0;
         }
         
         .intro-title {
-            font-size: 10px;
-            color: var(--accent-cyan);
-            margin-bottom: 12px;
-            text-shadow: 2px 2px 0px var(--bg-dark);
+            font-size: 1.4em;
+            color: var(--bg-dark);
+            margin-bottom: 16px;
+            text-shadow: none;
+            background: var(--accent-cyan);
+            color: white;
+            padding: 12px;
+            margin: -12px -12px 20px -12px;
         }
         
         .intro-text {
-            font-size: 7px;
+            font-size: 0.9em;
             line-height: 1.8;
-            color: var(--text-secondary);
-            margin-bottom: 12px;
+            color: var(--scenario-text);
+            margin-bottom: 16px;
             text-align: left;
         }
         
         .start-button {
             background: var(--health-good);
-            border: 3px solid #00cc00;
+            border: 4px solid #00dd00;
             color: white;
-            padding: 16px 24px;
+            padding: 20px 32px;
             font-family: inherit;
-            font-size: 9px;
+            font-size: 1em;
             font-weight: bold;
             text-transform: uppercase;
             cursor: pointer;
@@ -478,9 +542,9 @@
         }
         
         .start-button:hover {
-            background: #00cc00;
+            background: #00dd00;
             transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(0, 170, 0, 0.4);
+            box-shadow: 0 6px 16px rgba(0, 187, 0, 0.4);
         }
         
         /* Hidden class */
@@ -488,44 +552,40 @@
             display: none !important;
         }
         
-        /* Touch-friendly adjustments */
+        /* Mobile optimizations */
         @media (max-width: 768px) {
             .choice-button {
-                min-height: 72px;
-                padding: 16px;
-                font-size: 8px;
+                min-height: 90px;
+                padding: 18px;
+                font-size: 0.9em;
             }
             
             .choice-label {
-                font-size: 9px;
+                font-size: 1em;
             }
             
             .choice-description {
-                font-size: 7px;
+                font-size: 0.8em;
             }
             
             .continue-button {
-                padding: 20px;
-                font-size: 9px;
-            }
-        }
-        
-        /* Very small screens */
-        @media (max-width: 320px) {
-            body {
-                font-size: 7px;
+                padding: 24px;
+                font-size: 1em;
             }
             
             .game-container {
-                padding: 4px;
+                padding: 8px;
+            }
+        }
+        
+        /* Very large screens */
+        @media (min-width: 1400px) {
+            .game-container {
+                padding: 24px;
             }
             
-            .game-title {
-                font-size: 10px;
-            }
-            
-            .scenario-title {
-                font-size: 8px;
+            .metrics-grid {
+                grid-template-columns: repeat(3, 1fr);
             }
         }
     </style>
@@ -538,27 +598,28 @@
                 <div class="intro-title">🏛️ CAMPUS CRISIS MANAGER 🏛️</div>
                 
                 <div class="intro-text">
-                    <strong style="color: var(--accent-yellow);">Welcome, Campus Manager!</strong><br><br>
+                    <strong>Welcome, Campus Manager!</strong><br><br>
                     
                     You've been appointed to manage a university through <strong>four years of crisis and transformation</strong>. 
                     Your decisions will shape the institution's future and determine what kind of educational community you create.<br><br>
                     
-                    <strong style="color: var(--accent-cyan);">🎯 Your Mission:</strong><br>
+                    <strong>🎯 Your Mission:</strong><br>
                     Balance six key metrics while navigating crises, scandals, and recovery. Each decision reflects a different economic philosophy - choose wisely!<br><br>
                     
-                    <strong style="color: var(--accent-cyan);">📊 Metrics to Manage:</strong><br>
-                    • Financial Strength<br>
-                    • Reputation<br>
-                    • Research Quality<br>
-                    • Staff Morale<br>
-                    • Student Satisfaction<br>
-                    • Local Impact<br><br>
+                    <strong>📊 Metrics to Manage:</strong><br>
+                    • Financial Strength • Reputation • Research Quality<br>
+                    • Staff Morale • Student Satisfaction • Local Impact<br><br>
                     
-                    <strong style="color: var(--health-good);">Green (70-100):</strong> Thriving<br>
-                    <strong style="color: var(--health-warn);">Yellow (40-69):</strong> Warning<br>
-                    <strong style="color: var(--health-bad);">Red (0-39):</strong> Crisis!<br><br>
+                    <strong style="color: #00bb00;">Green (70-100):</strong> Thriving<br>
+                    <strong style="color: #ff9900;">Yellow (40-69):</strong> Warning<br>
+                    <strong style="color: #dd0000;">Red (0-39):</strong> Crisis!<br><br>
                     
-                    <em style="color: var(--text-dim);">Every choice has consequences. There's no single "right" answer - explore different management philosophies!</em>
+                    <strong>📈 Trend Indicators:</strong> Watch the mini-charts!<br>
+                    <strong style="color: #00cc00;">Green bars:</strong> Improving trends<br>
+                    <strong style="color: #ffaa00;">Yellow bars:</strong> Stable trends<br>
+                    <strong style="color: #cc0000;">Red bars:</strong> Declining trends<br><br>
+                    
+                    <em>Every choice has consequences. There's no single "right" answer - explore different management philosophies!</em>
                 </div>
                 
                 <button class="start-button pixel-border" onclick="startGame()">
@@ -577,7 +638,7 @@
             <div class="game-info">
                 <span>Month: <span id="current-month">September</span></span>
                 <span>Year: <span id="current-year">1</span></span>
-                <span>Scenario: <span id="scenario-count">1</span> of 30</span>
+                <span>Scenario: <span id="scenario-count">1</span> of 8</span>
             </div>
         </div>
         
@@ -588,7 +649,7 @@
                     <div class="metric-name">💰 Financial</div>
                     <div class="metric-display">
                         <div class="trend-indicator">
-                            <div class="trend-bars" id="financial-trend">
+                            <div class="trend-display" id="financial-trend">
                                 <div class="trend-bar"></div>
                                 <div class="trend-bar"></div>
                                 <div class="trend-bar"></div>
@@ -603,7 +664,7 @@
                     <div class="metric-name">⭐ Reputation</div>
                     <div class="metric-display">
                         <div class="trend-indicator">
-                            <div class="trend-bars" id="reputation-trend">
+                            <div class="trend-display" id="reputation-trend">
                                 <div class="trend-bar"></div>
                                 <div class="trend-bar"></div>
                                 <div class="trend-bar"></div>
@@ -618,7 +679,7 @@
                     <div class="metric-name">🔬 Research</div>
                     <div class="metric-display">
                         <div class="trend-indicator">
-                            <div class="trend-bars" id="research-trend">
+                            <div class="trend-display" id="research-trend">
                                 <div class="trend-bar"></div>
                                 <div class="trend-bar"></div>
                                 <div class="trend-bar"></div>
@@ -633,7 +694,7 @@
                     <div class="metric-name">👥 Staff</div>
                     <div class="metric-display">
                         <div class="trend-indicator">
-                            <div class="trend-bars" id="staff-trend">
+                            <div class="trend-display" id="staff-trend">
                                 <div class="trend-bar"></div>
                                 <div class="trend-bar"></div>
                                 <div class="trend-bar"></div>
@@ -648,7 +709,7 @@
                     <div class="metric-name">🎓 Students</div>
                     <div class="metric-display">
                         <div class="trend-indicator">
-                            <div class="trend-bars" id="student-trend">
+                            <div class="trend-display" id="student-trend">
                                 <div class="trend-bar"></div>
                                 <div class="trend-bar"></div>
                                 <div class="trend-bar"></div>
@@ -663,7 +724,7 @@
                     <div class="metric-name">🏘️ Local</div>
                     <div class="metric-display">
                         <div class="trend-indicator">
-                            <div class="trend-bars" id="local-trend">
+                            <div class="trend-display" id="local-trend">
                                 <div class="trend-bar"></div>
                                 <div class="trend-bar"></div>
                                 <div class="trend-bar"></div>
@@ -678,7 +739,7 @@
         
         <!-- Scenario Display -->
         <div class="scenario-container pixel-border">
-            <div class="scenario-card pixel-border" id="scenario-card">
+            <div class="scenario-card" id="scenario-card">
                 <div class="scenario-title" id="scenario-title">Loading...</div>
                 <div class="scenario-description" id="scenario-description">Preparing your first challenge...</div>
                 <div class="choices-container" id="choices-container">
@@ -702,7 +763,7 @@
     </div>
 
     <script>
-        // Game state - keeping your original logic
+        // Game state
         let gameState = {
             currentScenario: 0,
             currentMonth: 0,
@@ -731,7 +792,7 @@
             }
         };
 
-        // Complete scenarios array - proper 4-year crisis simulation
+        // Complete scenarios array
         const scenarios = [
             {
                 title: "Enrollment Surge Crisis",
@@ -997,35 +1058,52 @@
 
         function updateMetricDisplay(metricId, value) {
             const element = document.getElementById(metricId + '-value');
-            element.textContent = value;
-            element.className = 'metric-value ' + getMetricZone(value);
+            if (element) {
+                element.textContent = value;
+                element.className = 'metric-value ' + getMetricZone(value);
+            }
             updateTrendDisplay(metricId);
         }
 
         function updateTrendDisplay(metricId) {
             const history = gameState.metricsHistory[metricId];
             const trendContainer = document.getElementById(metricId + '-trend');
+            
+            if (!trendContainer) return;
+            
             const bars = trendContainer.querySelectorAll('.trend-bar');
             
-            if (history.length < 2) {
-                bars.forEach(bar => bar.className = 'trend-bar stable');
-                return;
-            }
-            
+            // Always show 4 bars representing the last 4 values (including starting position)
             const recent = history.slice(-4);
-            bars.forEach((bar, index) => {
-                if (index < recent.length - 1) {
-                    const current = recent[index + 1];
-                    const previous = recent[index];
-                    const diff = current - previous;
+            
+            bars.forEach((bar, barIndex) => {
+                if (barIndex < recent.length) {
+                    const value = recent[barIndex];
                     
-                    if (diff > 0) {
-                        bar.className = 'trend-bar up';
-                        bar.style.height = '40%';
+                    // Height based on actual value (0-100 scale)
+                    const height = Math.max(10, Math.min(90, (value / 100) * 80 + 10));
+                    
+                    // Color based on change from previous value
+                    let trendClass = 'trend-stable'; // Yellow for no change
+                    
+                    if (barIndex > 0) {
+                        const currentValue = recent[barIndex];
+                        const previousValue = recent[barIndex - 1];
+                        const change = currentValue - previousValue;
+                        
+                        if (change > 0) trendClass = 'trend-up';        // Green for positive
+                        else if (change < 0) trendClass = 'trend-down';  // Red for negative
+                        else trendClass = 'trend-stable';                // Yellow for no change
                     }
+                    
+                    bar.className = `trend-bar ${trendClass}`;
+                    bar.style.height = Math.round(height) + '%';
+                    bar.style.opacity = '1';
                 } else {
-                    bar.className = 'trend-bar stable';
-                    bar.style.height = '30%';
+                    // No data yet - show neutral bar
+                    bar.className = 'trend-bar trend-stable';
+                    bar.style.height = '50%';
+                    bar.style.opacity = '1';
                 }
             });
         }
@@ -1171,7 +1249,7 @@
             
             resultsTitle.textContent = `Results: ${choice.label}`;
             
-            let html = `<div class="intro-text" style="margin-bottom: 12px; font-style: italic;">"${choice.description}"</div>`;
+            let html = `<div class="intro-text" style="margin-bottom: 12px; font-style: italic; color: var(--text-secondary);">"${choice.description}"</div>`;
             
             // Metric changes
             html += '<div class="metric-changes">';
@@ -1204,7 +1282,7 @@
             // Crisis warnings
             const criticalMetrics = Object.keys(gameState.metrics).filter(m => gameState.metrics[m] < 40);
             if (criticalMetrics.length > 0) {
-                html += '<div class="triggers-container pixel-border" style="background: var(--health-bad); color: white;">';
+                html += '<div class="triggers-container pixel-border" style="background: var(--health-bad); color: white; border-color: var(--health-bad);">';
                 html += '<div class="triggers-title">🚨 CRITICAL ALERTS:</div>';
                 criticalMetrics.forEach(metric => {
                     html += `<div class="trigger-item">${metric.toUpperCase()} in crisis zone (${gameState.metrics[metric]})</div>`;
@@ -1246,8 +1324,8 @@
             document.getElementById('scenario-title').textContent = '🎓 Transformation Complete!';
             document.getElementById('scenario-description').innerHTML = `
                 Congratulations! You've guided your university through crisis and transformation.<br><br>
-                <strong style="color: var(--accent-cyan);">Your Leadership Style:</strong> ${dominantCulture.charAt(0).toUpperCase() + dominantCulture.slice(1)}<br><br>
-                <strong style="color: var(--accent-yellow);">Final Institution Profile:</strong><br>
+                <strong>Your Leadership Style:</strong> ${dominantCulture.charAt(0).toUpperCase() + dominantCulture.slice(1)}<br><br>
+                <strong>Final Institution Profile:</strong><br>
                 Look at your metrics above to see what kind of university you've created!
             `;
             
@@ -1274,7 +1352,6 @@
         
         // Initialize on load
         document.addEventListener('DOMContentLoaded', () => {
-            // Set initial trend displays
             updateAllMetrics();
         });
     </script>
@@ -1285,7 +1362,7 @@
         const manifest = {
             "name": "Campus Crisis Manager",
             "short_name": "Campus Crisis",
-            "description": "Manage your university through 4 years of crisis in this retro simulation game",
+            "description": "Manage your university through crisis in this retro simulation game",
             "start_url": "/",
             "display": "standalone",
             "background_color": "#1a1a1a",
@@ -1314,10 +1391,4 @@
         document.head.appendChild(link);
     </script>
 </body>
-</html> = `${Math.min(100, 40 + (diff * 2))}%`;
-                    } else if (diff < 0) {
-                        bar.className = 'trend-bar down';
-                        bar.style.height = `${Math.max(20, 40 + (diff * 2))}%`;
-                    } else {
-                        bar.className = 'trend-bar stable';
-                        bar.style.height
+</html>
