@@ -392,7 +392,129 @@
             }
         };
 
-        // Month names
+        // Crisis scenarios that trigger when metrics hit red zone
+        const crisisScenarios = {
+            financial: {
+                title: "FINANCIAL EMERGENCY",
+                description: "The university faces immediate insolvency. Creditors are demanding payment, staff haven't been paid, and operations may cease within weeks. Emergency action required!",
+                choices: [
+                    {
+                        label: "Community Crisis Response",
+                        description: "Emergency campus-wide meeting to find collective solutions",
+                        effects: { financial: 15, reputation: 10, research: -10, staff: 10, student: 5, local: 15 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Crisis Response", 
+                        description: "Immediate closure of failing departments, protect profitable areas",
+                        effects: { financial: 25, reputation: -5, research: 5, staff: -20, student: -15, local: -10 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Crisis Response",
+                        description: "Professional emergency restructuring and asset liquidation",
+                        effects: { financial: 30, reputation: 5, research: -5, staff: -15, student: -10, local: -5 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Crisis Response",
+                        description: "Seek emergency community support and government intervention",
+                        effects: { financial: 20, reputation: 15, research: 0, staff: 15, student: 10, local: 20 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            staff: {
+                title: "STAFF REVOLT",
+                description: "University staff have called an indefinite strike. Picket lines surround campus, teaching has stopped, and media coverage is damaging. Students are demanding fee refunds.",
+                choices: [
+                    {
+                        label: "Community Crisis Response",
+                        description: "Negotiate openly with union representatives for fair resolution",
+                        effects: { financial: -10, reputation: 15, research: -5, staff: 25, student: 10, local: 20 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Crisis Response",
+                        description: "Break the strike by hiring replacement staff and tough negotiations",
+                        effects: { financial: -15, reputation: -10, research: -10, staff: -15, student: -20, local: -15 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Crisis Response",
+                        description: "Professional mediation and systematic compromise package",
+                        effects: { financial: -5, reputation: 5, research: 0, staff: 15, student: 5, local: 10 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Crisis Response",
+                        description: "Address underlying wellbeing issues comprehensively",
+                        effects: { financial: -20, reputation: 20, research: 5, staff: 30, student: 15, local: 25 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            student: {
+                title: "STUDENT UPRISING",
+                description: "Students have occupied the main building demanding immediate changes. Social media campaigns are going viral, parents are withdrawing children, and enrollment for next year is collapsing.",
+                choices: [
+                    {
+                        label: "Community Crisis Response",
+                        description: "Join students in democratic reform discussions",
+                        effects: { financial: -5, reputation: 10, research: -5, staff: 15, student: 25, local: 15 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Crisis Response",
+                        description: "Clear the occupation and focus on high-achieving students only",
+                        effects: { financial: 5, reputation: -15, research: 5, staff: -10, student: -20, local: -10 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Crisis Response",
+                        description: "Professional crisis management and structured student engagement",
+                        effects: { financial: 0, reputation: 0, research: 0, staff: 5, student: 15, local: 5 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Crisis Response",
+                        description: "Comprehensive response to student needs and concerns",
+                        effects: { financial: -15, reputation: 15, research: 0, staff: 10, student: 30, local: 20 },
+                        culture: "nurturing"
+                    }
+                ]
+            },
+            reputation: {
+                title: "REPUTATION COLLAPSE",
+                description: "National media coverage has destroyed the university's reputation. Enrollment is plummeting, staff are leaving, and funding bodies are reconsidering support. The institution's survival is threatened.",
+                choices: [
+                    {
+                        label: "Community Crisis Response",
+                        description: "Transparent community response showing authentic change",
+                        effects: { financial: -10, reputation: 20, research: 0, staff: 15, student: 10, local: 25 },
+                        culture: "community"
+                    },
+                    {
+                        label: "Individualistic Crisis Response",
+                        description: "Aggressive PR campaign highlighting individual successes",
+                        effects: { financial: -5, reputation: 15, research: 10, staff: -5, student: 0, local: -5 },
+                        culture: "individualistic"
+                    },
+                    {
+                        label: "Corporate Crisis Response",
+                        description: "Professional reputation management and systematic reform",
+                        effects: { financial: 5, reputation: 25, research: 0, staff: 5, student: 5, local: 10 },
+                        culture: "corporate"
+                    },
+                    {
+                        label: "Nurturing Crisis Response",
+                        description: "Focus on serving community needs regardless of external opinion",
+                        effects: { financial: -5, reputation: 15, research: 10, staff: 20, student: 20, local: 30 },
+                        culture: "nurturing"
+                    }
+                ]
+            }
+        };
         const months = [
             "September", "October", "November", "December", 
             "January", "February", "March", "April", 
@@ -409,7 +531,7 @@
                     {
                         label: "Community Response",
                         description: "Democratic meetings with all stakeholders for collaborative solutions",
-                        effects: { financial: 5, reputation: 5, research: -5, staff: 15, student: 10, local: 5 },
+                        effects: { financial: -5, reputation: 5, research: -10, staff: 15, student: 10, local: 5 },
                         culture: "community"
                     },
                     {
@@ -439,7 +561,7 @@
                     {
                         label: "Community Response",
                         description: "Staff-student committees to redistribute workload fairly",
-                        effects: { financial: -5, reputation: 5, research: -5, staff: 15, student: 5, local: 5 },
+                        effects: { financial: -10, reputation: 0, research: -10, staff: 15, student: 5, local: 5 },
                         culture: "community"
                     },
                     {
@@ -1661,6 +1783,15 @@
         }
 
         function nextScenario() {
+            // Check for crisis interrupt before proceeding to next scenario
+            const crisisType = checkForCrisisInterrupt();
+            if (crisisType) {
+                document.getElementById('results-container').style.display = 'none';
+                document.getElementById('scenario-container').style.display = 'block';
+                displayCrisisScenario(crisisType);
+                return;
+            }
+            
             gameState.currentScenario++;
             gameState.currentMonth++;
             
