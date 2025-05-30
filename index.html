@@ -1782,16 +1782,91 @@
             document.getElementById('scenario-container').style.display = 'none';
         }
 
-        function nextScenario() {
+        function makeChoice(choiceIndex) {
+            const scenario = scenarios[gameState.currentScenario];
+            const choice = scenario.choices[choiceIndex];
+            
+            // Track cultural choice
+            gameState.culturalChoices[choice.culture]++;
+            
+            // Apply effects
+            const oldMetrics = {...gameState.metrics};
+            Object.keys(choice.effects).forEach(metric => {
+                gameState.metrics[metric] = Math.max(0, Math.min(100, gameState.metrics[metric] + choice.effects[metric]));
+            });
+            
+            // Apply cascade effects
+            const cascadeMessage = applyCascadeEffects();
+            const positiveMessage = applyPositiveCascades();
+            
+            // Update display and record in history
+            updateAllMetrics();
+            recordMetricsInHistory();
+            
+            // Show results
+            showResults(choice, oldMetrics, cascadeMessage + positiveMessage);
+        }
+
+        function showResults(choice, oldMetrics, cascadeMessage) {
+            const triggers = checkTriggers(oldMetrics);
+            
+            let resultsHTML = `
+                <div class="results">
+                    <div class="results-title">Results: ${choice.label}</div>
+                    <div style="margin-bottom: 15px; font-style: italic;">"${choice.description}"</div>
+            `;
+            
+            // Show metric changes
+            Object.keys(choice.effects).forEach(metric => {
+                const change = choice.effects[metric];
+                const oldValue = oldMetrics[metric];
+                const newValue = gameState.metrics[metric];
+                const changeClass = change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral';
+                const changeStr = change > 0 ? `+${change}` : `${change}`;
+                
+                resultsHTML += `
+                    <div class="metric-change">
+                        ${metric.charAt(0).toUpperCase() + metric.slice(1)}: ${oldValue} → ${newValue} <span class="${changeClass}">(${changeStr})</span>
+                    </div>
+                `;
+            });
+            
+            if (cascadeMessage) {
+                resultsHTML += `<div style="margin-top: 15px; color: #ffff00;">${cascadeMessage}</div>`;
+            }
+            
+            if (triggers.length > 0) {
+                resultsHTML += `
+                    <div class="triggers">
+                        <div class="triggers-title">⚠️ TRIGGERED EVENTS:</div>
+                        ${triggers.map(trigger => `<div>• ${trigger}</div>`).join('')}
+                    </div>
+                `;
+            }
+            
+            resultsHTML += `
+                    <button class="continue-button" onclick="continueToNextScenario()">Continue to Next Month</button>
+                </div>
+            `;
+            
+            document.getElementById('results-container').innerHTML = resultsHTML;
+            document.getElementById('results-container').style.display = 'block';
+            document.getElementById('scenario-container').style.display = 'none';
+        }
+
+        function continueToNextScenario() {
             // Check for crisis interrupt before proceeding to next scenario
             const crisisType = checkForCrisisInterrupt();
             if (crisisType) {
-                document.getElementById('results-container').style.display = 'none';
-                document.getElementById('scenario-container').style.display = 'block';
                 displayCrisisScenario(crisisType);
                 return;
             }
             
+            // Proceed to next regular scenario
+            nextRegularScenario();
+        }
+
+        function nextRegularScenario() {
             gameState.currentScenario++;
             gameState.currentMonth++;
             
@@ -1800,9 +1875,16 @@
                 gameState.currentYear++;
             }
             
-            document.getElementById('current-month').textContent = months[gameState.currentMonth];
-            document.getElementById('current-year').textContent = gameState.currentYear;
-            document.getElementById('scenario-count').textContent = gameState.currentScenario + 1;
+            // Update display counters
+            if (document.getElementById('current-month')) {
+                document.getElementById('current-month').textContent = months[gameState.currentMonth];
+            }
+            if (document.getElementById('current-year')) {
+                document.getElementById('current-year').textContent = gameState.currentYear;
+            }
+            if (document.getElementById('scenario-count')) {
+                document.getElementById('scenario-count').textContent = gameState.currentScenario + 1;
+            }
             
             document.getElementById('results-container').style.display = 'none';
             document.getElementById('scenario-container').style.display = 'block';
